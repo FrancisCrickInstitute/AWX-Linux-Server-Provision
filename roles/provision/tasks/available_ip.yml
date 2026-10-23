@@ -1,0 +1,46 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Requests the next available IP address from Infoblox for an
+# eligible network while excluding reserved addresses at the start
+# of the subnet.
+
+- name: Establish available IP address
+  when:
+    - provision_vm_ip_auto is not defined
+      or provision_vm_ip_auto | length == 0
+  block:
+    - name: Reset excluded IP addresses
+      ansible.builtin.set_fact:
+        provision_excluded_ips: []
+
+    - name: Establish reserved IP addresses to exclude
+      ansible.builtin.set_fact:
+        provision_excluded_ips: >-
+          {{
+            provision_excluded_ips
+            + [network.value.ip_pattern ~ item]
+          }}
+      loop: >-
+        {{
+          range(
+            provision_infoblox_excluded_ip_start,
+            provision_infoblox_excluded_ip_end + 1
+          ) | list
+        }}
+
+    - name: Request next available IP address from Infoblox
+      ansible.builtin.set_fact:
+        provision_vm_ip_auto: >-
+          {{
+            lookup(
+              'infoblox.nios_modules.nios_next_ip',
+              network.value.infoblox_network,
+              exclude=provision_excluded_ips,
+              provider={
+                'host': provision_infoblox_host,
+                'username': provision_infoblox_username,
+                'password': provision_infoblox_password
+              }
+            )[0]
+          }}
+      failed_when: false

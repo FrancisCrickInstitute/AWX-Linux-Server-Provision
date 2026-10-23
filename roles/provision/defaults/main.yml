@@ -1,0 +1,72 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines configurable default values used by the Linux VM
+# provisioning role. Values can be overridden by playbook, inventory
+# or AWX variables where required.
+
+# -----------------------------------------------------------------------------
+# VM provisioning
+# -----------------------------------------------------------------------------
+
+provision_state: present
+
+provision_vm_state: poweredon
+provision_vm_wait_for_ip_address: true
+
+# -----------------------------------------------------------------------------
+# Operating system
+# -----------------------------------------------------------------------------
+
+provision_operating_system: "Rocky 10"
+
+# -----------------------------------------------------------------------------
+# VM hardware defaults
+# -----------------------------------------------------------------------------
+
+# Standard VM specification.
+# These values can be overridden through AWX for VMs requiring additional
+# CPU, memory or disk capacity.
+
+provision_vm_default_num_cpus: 1
+provision_vm_default_memory_mb: 2048
+provision_vm_default_disk_size_gb: 20
+provision_vm_default_disk_type: thick
+
+# -----------------------------------------------------------------------------
+# vCenter configuration
+# -----------------------------------------------------------------------------
+
+# The vCenter username can be overridden through AWX, inventory or playbook
+# variables if the service account changes.
+
+provision_vcenter_user: svc-ansible-usr@vsphere.local
+provision_vcenter_validate_certs: false
+
+# -----------------------------------------------------------------------------
+# Infoblox configuration
+# -----------------------------------------------------------------------------
+
+# Infoblox server used for host record lookups and IP allocation.
+
+provision_infoblox_host: ddi-automation.thecrick.org
+
+# Reserve the first eleven addresses, .0 through .10, from automatic
+# Infoblox IP allocation.
+
+provision_infoblox_excluded_ip_start: 0
+provision_infoblox_excluded_ip_end: 10
+
+# -----------------------------------------------------------------------------
+# VM availability check
+# -----------------------------------------------------------------------------
+
+provision_wait_port: 22
+provision_wait_timeout: 300
+
+# -----------------------------------------------------------------------------
+# Notifications
+# -----------------------------------------------------------------------------
+
+provision_notification_enabled: true
+provision_notification_username: "Ansible AWX"
+provision_notification_validate_certs: false

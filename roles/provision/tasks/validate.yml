@@ -1,0 +1,60 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Validates required VM provisioning inputs before any changes are
+# made to Infoblox or VMware.
+
+- name: Validate required provisioning variables
+  ansible.builtin.assert:
+    that:
+      - vm_name is defined
+      - vm_name | length > 0
+      - servicenow_ticket is defined
+      - servicenow_ticket | length > 0
+      - bsn is defined
+      - bsn | length > 0
+      - vm_description is defined
+      - vm_description | length > 0
+      - owner is defined
+      - owner | length > 0
+    fail_msg: >-
+      One or more required provisioning variables are missing.
+      Check vm_name, servicenow_ticket, bsn, vm_description and owner.
+
+- name: Set normalised VM hostname for validation
+  ansible.builtin.set_fact:
+    provision_vm_name: "{{ vm_name | lower }}"
+
+- name: Validate VM hostname format
+  ansible.builtin.assert:
+    that:
+      - >-
+        provision_vm_name is
+        match('^[a-z]lvd[0-9]-[a-z]{2}-(u|w)-(d|t|p)-[0-9]{2}$')
+    fail_msg: "{{ provision_vm_name }} is not a valid VM hostname."
+
+- name: Validate manually supplied IP address
+  ansible.builtin.assert:
+    that:
+      - vm_ip_manual is ansible.utils.ipaddr
+    fail_msg: "{{ vm_ip_manual }} is not a valid IP address."
+  when:
+    - vm_ip_manual is defined
+    - vm_ip_manual | length > 0
+
+- name: Validate VM hardware values
+  ansible.builtin.assert:
+    that:
+      - >-
+        vm_num_cpus
+        | default(provision_vm_default_num_cpus)
+        | int > 0
+      - >-
+        vm_memory_mb
+        | default(provision_vm_default_memory_mb)
+        | int > 0
+      - >-
+        vm_disk_size_gb
+        | default(provision_vm_default_disk_size_gb)
+        | int > 0
+    fail_msg: >-
+      CPU, memory and disk values must all be greater than zero.

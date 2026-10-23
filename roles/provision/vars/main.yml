@@ -1,0 +1,294 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines infrastructure data used by the Linux VM provisioning role.
+# Contains domain, network, template and vCenter placement mappings, together
+# with Ansible Vault-encrypted credentials.
+
+# -----------------------------------------------------------------------------
+# Domains
+# -----------------------------------------------------------------------------
+
+provision_domain_dev: thecrick.test
+provision_domain_prod: thecrick.org
+
+provision_domain_dict:
+  Staging: "{{ provision_domain_dev }}"
+  Production: "{{ provision_domain_prod }}"
+  GPUCluster: "{{ provision_domain_prod }}"
+
+# -----------------------------------------------------------------------------
+# Networks
+# -----------------------------------------------------------------------------
+# ip_pattern is used to associate a resolved IP with the correct network.
+# infoblox_network is the complete subnet supplied to Infoblox.
+# -----------------------------------------------------------------------------
+
+provision_networks:
+  HPC_501:
+    vlan: "HPC_501"
+    ip_pattern: "10.28.8."
+    infoblox_network: "10.28.8.0/24"
+    gateway: "10.28.8.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_prod }}"
+    environment: Production
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  HPC_502:
+    vlan: "HPC_502"
+    ip_pattern: "10.28.9."
+    infoblox_network: "10.28.9.0/24"
+    gateway: "10.28.9.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_prod }}"
+    environment: Production
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  HPC_509:
+    vlan: "HPC_509"
+    ip_pattern: "10.28.41."
+    infoblox_network: "10.28.41.0/24"
+    gateway: "10.28.41.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_prod }}"
+    environment: Production
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  BMS_613:
+    vlan: "BMS_613"
+    ip_pattern: "10.27.226."
+    infoblox_network: "10.27.226.0/24"
+    gateway: "10.27.226.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_prod }}"
+    environment: Production
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  BSV_102:
+    vlan: "BSV_102"
+    ip_pattern: "10.24.0."
+    infoblox_network: "10.24.0.0/24"
+    gateway: "10.24.0.254"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_prod }}"
+    environment: Production
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  DEV_960:
+    vlan: "DEV_960"
+    ip_pattern: "10.152.22."
+    infoblox_network: "10.152.22.0/24"
+    gateway: "10.152.22.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_dev }}"
+    environment: Staging
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  DEV_961:
+    vlan: "DEV_961"
+    ip_pattern: "10.152.23."
+    infoblox_network: "10.152.23.0/24"
+    gateway: "10.152.23.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_dev }}"
+    environment: Staging
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  DEV_962:
+    vlan: "DEV_962"
+    ip_pattern: "10.152.24."
+    infoblox_network: "10.152.24.0/24"
+    gateway: "10.152.24.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_dev }}"
+    environment: Staging
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  INF_210:
+    vlan: "INF_210"
+    ip_pattern: "10.27.244."
+    infoblox_network: "10.27.244.0/24"
+    gateway: "10.27.244.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_prod }}"
+    environment: Production
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  INF_218:
+    vlan: "INF_218"
+    ip_pattern: "10.24.96."
+    infoblox_network: "10.24.96.0/24"
+    gateway: "10.24.96.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_prod }}"
+    environment: Production
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  PRD_611:
+    vlan: "PRD_611"
+    ip_pattern: "10.27.241."
+    infoblox_network: "10.27.241.0/24"
+    gateway: "10.27.241.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_prod }}"
+    environment: Production
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  EM_500:
+    vlan: "EM_500"
+    ip_pattern: "10.28.5."
+    infoblox_network: "10.28.0.0/21"
+    gateway: "10.28.0.1"
+    netmask: "255.255.248.0"
+    domain: "{{ provision_domain_prod }}"
+    environment: Production
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  GPU-VDS-01-VLAN_210:
+    vlan: "GPU-VDS-01-VLAN_210"
+    ip_pattern: "10.27.244."
+    infoblox_network: "10.27.244.0/24"
+    gateway: "10.27.244.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_prod }}"
+    environment: GPUCluster
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  PRD_203:
+    vlan: "PRD_203"
+    ip_pattern: "10.27.252."
+    infoblox_network: "10.27.252.0/24"
+    gateway: "10.27.252.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_prod }}"
+    environment: Production
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  DEV_965:
+    vlan: "DEV_965"
+    ip_pattern: "10.152.27."
+    infoblox_network: "10.152.27.0/24"
+    gateway: "10.152.27.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_dev }}"
+    environment: Staging
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+  PRD_390:
+    vlan: "PRD_390"
+    ip_pattern: "10.27.242."
+    infoblox_network: "10.27.242.0/24"
+    gateway: "10.27.242.1"
+    netmask: "255.255.255.0"
+    domain: "{{ provision_domain_prod }}"
+    environment: Production
+    dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+# -----------------------------------------------------------------------------
+# VMware templates
+# -----------------------------------------------------------------------------
+
+provision_templates:
+  "Rocky 10":
+    name: "template-rocky-10"
+
+# -----------------------------------------------------------------------------
+# vCenter environment placement
+# -----------------------------------------------------------------------------
+
+provision_vcenter:
+  Staging:
+    cluster: "Dev-Cluster-01"
+    datastore: "Pure-Dev-DSC"
+    folder: "/NetApp-HCI-Dev/HCI_VMs/Servers/Linux_Dev"
+    vcenter_host: "clvd1-vc-w-p-02.thecrick.org"
+    vcenter_datacenter: "NetApp-HCI-Datacenter-01"
+    vm_template_folder: >-
+      /NetApp-HCI-Datacenter-01/vm/NetApp-HCI-Prod/HCI_Templates
+
+  Production:
+    cluster: "Prod-Cluster-01"
+    datastore: "Pure-Prod-DSC"
+    folder: "/NetApp-HCI-Prod/HCI_VMs/HCI_Servers/HCI_Linux"
+    vcenter_host: "clvd1-vc-w-p-02.thecrick.org"
+    vcenter_datacenter: "NetApp-HCI-Datacenter-01"
+    vm_template_folder: >-
+      /NetApp-HCI-Datacenter-01/vm/NetApp-HCI-Prod/HCI_Templates
+
+  GPUCluster:
+    cluster: "GPU-Supermicro-Cluster-01"
+    datastore: "Pure-GPU-Datastore-Cluster-01"
+    folder: "/GPU_VMs/Linux"
+    vcenter_host: "clvd4-vc-a-p-01.thecrick.org"
+    vcenter_datacenter: "Supermicro-GPU-Datacenter-01"
+    vm_template_folder: >-
+      /Supermicro-GPU-Datacenter-01/vm/LinuxTemplate
+
+# -----------------------------------------------------------------------------
+# Ansible Vault-encrypted credentials
+# -----------------------------------------------------------------------------
+
+provision_vcenter_pass: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  32636535613763376166346561396461353332613966346233616537653761653637666137633639
+  3161386262383532356463333261616464306537383439390a356664323962383035333935343537
+  63646164653637306561666133303634373531306133323835343265386230393033353261623832
+  3861653237326461660a303037363361336264353435386461666666373163386530326431613633
+  3435
+
+provision_infoblox_username: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  37346465613433643339663834363663333362613332316661663234663931306437643563316633
+  3634653063343562373363373732653232343333323739390a316630666535626234623630356431
+  62303034383130333531613533373539663632393535643733326162636431306633343862386633
+  3032653739313239370a356236343137653134653862636537626132363031626233316339386634
+  34343233653365343238613033616335663735633330376333323061323630646636
+
+provision_infoblox_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  61343630303733633766393531643136323763646137623164643735303862613561633961666163
+  3865343266383539666232613965636464366538323965660a316162646532656333333736316662
+  65303165343534323362313761333661336332346535326163343230313038393436346139303535
+  3864383962323166630a313666323939306463306365346266386562396238366631313665656235
+  34393765343034343131613064653137383132643935373233353437333731633464
+
+provision_slack_token: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  30353633373132313761616330316238396239643239653233303338623464656235313730376233
+  3864623436323839656536383337636633626663323030320a623265393232326335323063363164
+  31616164353664353263316565363461656234346162323330363833386466393532633037323962
+  3832343431353463610a366664663362626164366631623131343432643630343036313165303739
+  36313438326639653736346264396530343237353462663832343461326465663264313233363137
+  6163363535636361306139346537666165633834383739373639

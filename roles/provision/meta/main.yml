@@ -1,0 +1,13 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines metadata and collection dependencies for the Linux VM
+# provisioning role.
+
+galaxy_info:
+  role_name: provision
+  author: Francis Crick Institute
+  description: Provision Linux virtual machines using VMware and Infoblox
+  license: proprietary
+  min_ansible_version: "2.16"
+
+dependencies: []

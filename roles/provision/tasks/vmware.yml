@@ -1,0 +1,41 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Provisions the Linux VM in VMware using the derived vCenter,
+# hardware and networking configuration, then waits for SSH availability.
+
+- name: Provision VMware VM
+  community.vmware.vmware_guest:
+    validate_certs: "{{ provision_vcenter_validate_certs }}"
+    hostname: "{{ provision_vcenter_host }}"
+    username: "{{ provision_vcenter_user }}"
+    password: "{{ provision_vcenter_pass }}"
+    name: "{{ provision_vm_name }}"
+    state: "{{ provision_vm_state }}"
+    template: "{{ provision_vm_template }}"
+    datacenter: "{{ provision_vcenter_datacenter }}"
+    cluster: "{{ provision_vcenter_cluster }}"
+    folder: "{{ provision_vcenter_folder }}"
+    datastore: "{{ provision_vcenter_datastore }}"
+    annotation: "{{ provision_vm_annotation }}"
+    wait_for_ip_address: "{{ provision_vm_wait_for_ip_address }}"
+    disk: "{{ provision_vm_disks }}"
+    hardware: "{{ provision_vm_hardware }}"
+    networks:
+      - name: "{{ provision_vm_vlan }}"
+        type: static
+        ip: "{{ provision_vm_ip }}"
+        netmask: "{{ provision_vm_netmask }}"
+        gateway: "{{ provision_vm_gateway }}"
+        connected: true
+    customization:
+      domain: "{{ provision_vm_domain }}"
+      hostname: "{{ provision_vm_name }}"
+      dns_servers: "{{ provision_vm_dns_servers }}"
+  register: provision_vmware_result
+
+- name: Wait for VM SSH availability
+  ansible.builtin.wait_for:
+    host: "{{ provision_vm_ip }}"
+    port: "{{ provision_wait_port }}"
+    timeout: "{{ provision_wait_timeout }}"
+    state: started

@@ -1,0 +1,17 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Sends a Slack notification after successful VM provisioning.
+
+- name: Prepare Slack notification
+  ansible.builtin.set_fact:
+    provision_slack_message: |-
+      New server provisioned: {{ provision_vm_fqdn }} - {{ provision_vm_ip }}
+      {{ provision_vm_annotation }}
+
+- name: Send Slack notification
+  community.general.slack:
+    token: "{{ provision_slack_token }}"
+    msg: "{{ provision_slack_message }}"
+    username: "{{ provision_notification_username }}"
+    color: good
+    validate_certs: "{{ provision_notification_validate_certs }}"

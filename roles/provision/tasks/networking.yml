@@ -1,0 +1,126 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Resolves or allocates the VM IP address through Infoblox,
+# creates the Infoblox host record where required, and derives the
+# VMware network configuration from the selected IP address.
+
+- name: Look up existing Infoblox host record
+  ansible.builtin.set_fact:
+    provision_host_record: >-
+      {{
+        lookup(
+          'infoblox.nios_modules.nios_lookup',
+          'record:host',
+          filter={'name': provision_vm_fqdn},
+          provider={
+            'host': provision_infoblox_host,
+            'username': provision_infoblox_username,
+            'password': provision_infoblox_password
+          }
+        )
+      }}
+
+- name: Reuse IP address from existing Infoblox host record
+  ansible.builtin.set_fact:
+    provision_vm_ip: >-
+      {{ provision_host_record.ipv4addrs[0].ipv4addr }}
+  when:
+    - provision_host_record is mapping
+    - provision_host_record.ipv4addrs is defined
+    - provision_host_record.ipv4addrs | length > 0
+
+- name: Provision new Infoblox host record
+  when:
+    - provision_host_record == []
+    - provision_state == "present"
+  block:
+    - name: Use manually supplied IP address
+      ansible.builtin.set_fact:
+        provision_vm_ip: "{{ vm_ip_manual }}"
+      when:
+        - vm_ip_manual is defined
+        - vm_ip_manual | length > 0
+
+    - name: Search eligible networks for an available IP address
+      ansible.builtin.include_tasks: available_ip.yml
+      loop: "{{ provision_networks | dict2items }}"
+      loop_control:
+        loop_var: network
+        label: "{{ network.key }}"
+      when:
+        - >-
+          provision_platform_environment
+          == network.value.environment
+        - vm_ip_manual is not defined or vm_ip_manual | length == 0
+
+    - name: Use automatically allocated IP address
+      ansible.builtin.set_fact:
+        provision_vm_ip: "{{ provision_vm_ip_auto }}"
+      when:
+        - provision_vm_ip is not defined or provision_vm_ip | length == 0
+        - provision_vm_ip_auto is defined
+        - provision_vm_ip_auto | length > 0
+
+    - name: Validate resolved VM IP address
+      ansible.builtin.assert:
+        that:
+          - provision_vm_ip is defined
+          - provision_vm_ip | length > 0
+        fail_msg: >-
+          No IP address could be resolved for {{ provision_vm_fqdn }}.
+          Check the manual IP input and available Infoblox networks for
+          the {{ provision_platform_environment }} environment.
+
+    - name: Create Infoblox host record
+      infoblox.nios_modules.nios_host_record:
+        state: present
+        name: "{{ provision_vm_fqdn }}"
+        ipv4:
+          - address: "{{ provision_vm_ip }}"
+        comment: "{{ provision_vm_annotation }}"
+        provider:
+          host: "{{ provision_infoblox_host }}"
+          username: "{{ provision_infoblox_username }}"
+          password: "{{ provision_infoblox_password }}"
+      register: provision_infoblox_host_record_result
+      failed_when:
+        - not provision_infoblox_host_record_result.changed
+        - >-
+          provision_infoblox_host_record_result.type
+          | default("")
+          != "AdmConDataError"
+
+- name: Match resolved IP address to configured network
+  ansible.builtin.set_fact:
+    provision_vm_network_name: "{{ item.key }}"
+    provision_vm_vlan: "{{ item.value.vlan }}"
+    provision_vm_netmask: "{{ item.value.netmask }}"
+    provision_vm_gateway: "{{ item.value.gateway }}"
+    provision_vm_domain: "{{ item.value.domain }}"
+    provision_vm_dns_servers: "{{ item.value.dns_servers }}"
+  loop: "{{ provision_networks | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - item.value.environment == provision_platform_environment
+    - >-
+      provision_vm_ip is
+      match(
+        '^'
+        ~ (item.value.ip_pattern | regex_escape)
+        ~ '[0-9]{1,3}$'
+      )
+
+- name: Validate resolved VMware network configuration
+  ansible.builtin.assert:
+    that:
+      - provision_vm_network_name is defined
+      - provision_vm_vlan is defined
+      - provision_vm_netmask is defined
+      - provision_vm_gateway is defined
+      - provision_vm_domain is defined
+      - provision_vm_dns_servers is defined
+      - provision_vm_dns_servers | length > 0
+    fail_msg: >-
+      IP address {{ provision_vm_ip }} does not match a configured network
+      for the {{ provision_platform_environment }} environment.
