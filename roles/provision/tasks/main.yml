@@ -1,14 +1,17 @@
 ---
 # Created by Adam Spandel, October 2026
 # Purpose: Defines the execution order for Linux VM provisioning.
-# Coordinates validation, variable preparation, networking, VMware provisioning
-# and optional notifications.
+# Coordinates validation, duplicate protection, networking, VMware
+# provisioning and optional notifications.
 
 - name: Validate provisioning inputs
   ansible.builtin.import_tasks: validate.yml
 
 - name: Prepare provisioning variables
   ansible.builtin.import_tasks: prepare.yml
+
+- name: Check for existing VMware VM
+  ansible.builtin.import_tasks: check_existing_vm.yml
 
 - name: Configure networking and Infoblox
   ansible.builtin.import_tasks: networking.yml
@@ -19,3 +22,4 @@
 - name: Send provisioning notification
   ansible.builtin.import_tasks: notify.yml
   when: provision_notification_enabled | bool
+  

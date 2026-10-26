@@ -1,0 +1,48 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Prevents the provisioning playbook from modifying or recreating
+# a virtual machine that already exists in vCenter.
+
+- name: Check whether VM already exists in vCenter
+  community.vmware.vmware_guest_info:
+    hostname: "{{ provision_vcenter_host }}"
+    username: "{{ provision_vcenter_user }}"
+    password: "{{ provision_vcenter_pass }}"
+    validate_certs: "{{ provision_vcenter_validate_certs }}"
+    datacenter: "{{ provision_vcenter_datacenter }}"
+    name: "{{ provision_vm_name }}"
+  register: provision_existing_vm_info
+  failed_when: false
+
+- name: Validate vCenter lookup result
+  ansible.builtin.assert:
+    that:
+      - >-
+        provision_existing_vm_info.instance is defined
+        or
+        (
+          provision_existing_vm_info.msg is defined
+          and
+          (
+            'not found' in provision_existing_vm_info.msg | lower
+            or
+            'unable to find' in provision_existing_vm_info.msg | lower
+          )
+        )
+    fail_msg: >-
+      Unable to determine whether VM {{ provision_vm_name }} exists in
+      vCenter {{ provision_vcenter_host }}.
+      vCenter returned:
+      {{ provision_existing_vm_info.msg | default('No error message returned') }}
+
+- name: Report existing VM
+  ansible.builtin.debug:
+    msg: >-
+      VM {{ provision_vm_name }} already exists in vCenter
+      {{ provision_vcenter_host }}. No Infoblox, VMware or Slack changes
+      will be made.
+  when: provision_existing_vm_info.instance is defined
+
+- name: End play when VM already exists
+  ansible.builtin.meta: end_play
+  when: provision_existing_vm_info.instance is defined
