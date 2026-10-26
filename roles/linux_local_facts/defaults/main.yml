@@ -2,7 +2,7 @@
 # Created by Adam Spandel, October 2026
 # Purpose: Defines default configuration for Linux local custom facts.
 # Local facts are used by AWX to identify how each Linux server should
-# be configured and managed.
+# be configured and managed...
 
 # -----------------------------------------------------------------------------
 # Local facts paths
