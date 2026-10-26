@@ -49,8 +49,8 @@
         | default(provision_vm_default_num_cpus)
         | int > 0
       - >-
-        vm_memory_mb
-        | default(provision_vm_default_memory_mb)
+        vm_memory_gb
+        | default(provision_vm_default_memory_gb)
         | int > 0
       - >-
         vm_disk_size_gb
