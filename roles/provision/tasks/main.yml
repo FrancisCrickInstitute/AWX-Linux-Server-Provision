@@ -22,4 +22,3 @@
 - name: Send provisioning notification
   ansible.builtin.import_tasks: notify.yml
   when: provision_notification_enabled | bool
-  

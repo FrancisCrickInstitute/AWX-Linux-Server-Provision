@@ -39,9 +39,22 @@
   ansible.builtin.debug:
     msg: >-
       VM {{ provision_vm_name }} already exists in vCenter
-      {{ provision_vcenter_host }}. No Infoblox, VMware or Slack changes
+      {{ provision_vcenter_host }}. No Infoblox or VMware changes
       will be made.
   when: provision_existing_vm_info.instance is defined
+
+- name: Send Slack notification for existing VM
+  community.general.slack:
+    token: "{{ provision_slack_token }}"
+    msg: >-
+      Provisioning skipped: {{ provision_vm_name }} already exists in
+      vCenter {{ provision_vcenter_host }}. No provisioning changes were made.
+    username: "{{ provision_notification_username }}"
+    color: warning
+    validate_certs: "{{ provision_notification_validate_certs }}"
+  when:
+    - provision_existing_vm_info.instance is defined
+    - provision_notification_enabled | bool
 
 - name: End play when VM already exists
   ansible.builtin.meta: end_play
