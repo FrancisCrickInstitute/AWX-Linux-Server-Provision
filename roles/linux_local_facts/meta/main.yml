@@ -1,0 +1,12 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines metadata for the Linux local facts role.
+
+galaxy_info:
+  role_name: linux_local_facts
+  author: Francis Crick Institute
+  description: Manage and cache local Ansible facts for Rocky Linux servers
+  license: proprietary
+  min_ansible_version: "2.16"
+
+dependencies: []

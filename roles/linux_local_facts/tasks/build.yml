@@ -1,0 +1,91 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Builds the managed Linux local-facts dictionary by preserving
+# existing facts and applying the standard Rocky Linux configuration.
+
+- name: Initialise managed local facts
+  ansible.builtin.set_fact:
+    linux_local_facts_managed: >-
+      {{
+        linux_local_facts_existing
+        | combine(linux_local_facts_standard)
+      }}
+
+- name: Configure patching facts
+  ansible.builtin.set_fact:
+    linux_local_facts_managed: >-
+      {{
+        linux_local_facts_managed
+        | combine(
+            {
+              'ansiblelinuxautopatch':
+                linux_local_facts_automatic_patching | bool,
+              'ansiblelinuxmanualpatch':
+                linux_local_facts_manual_patching | bool
+            }
+          )
+      }}
+
+- name: Configure Development and Test environment facts
+  ansible.builtin.set_fact:
+    linux_local_facts_managed: >-
+      {{
+        linux_local_facts_managed
+        | combine(
+            {
+              'ansibledev': true,
+              'ansibleprod': false
+            }
+          )
+      }}
+  when:
+    - >-
+      inventory_hostname
+      is match('^clvd0-[a-z]{2}-[a-z]-(d|t)-[0-9]{2}$')
+
+- name: Configure Production environment facts
+  ansible.builtin.set_fact:
+    linux_local_facts_managed: >-
+      {{
+        linux_local_facts_managed
+        | combine(
+            {
+              'ansibledev': false,
+              'ansibleprod': true
+            }
+          )
+      }}
+  when:
+    - >-
+      inventory_hostname
+      is match('^(clvd1|clvd4)-[a-z]{2}-[a-z]-p-[0-9]{2}$')
+
+- name: Configure Production primary patching group
+  ansible.builtin.set_fact:
+    linux_local_facts_managed: >-
+      {{
+        linux_local_facts_managed
+        | combine(
+            {
+              'ansibleprimary': true,
+              'ansiblesecondary': false
+            }
+          )
+      }}
+  when:
+    - linux_local_facts_production_patching_group == "ansibleprimary"
+
+- name: Configure Production secondary patching group
+  ansible.builtin.set_fact:
+    linux_local_facts_managed: >-
+      {{
+        linux_local_facts_managed
+        | combine(
+            {
+              'ansibleprimary': false,
+              'ansiblesecondary': true
+            }
+          )
+      }}
+  when:
+    - linux_local_facts_production_patching_group == "ansiblesecondary"

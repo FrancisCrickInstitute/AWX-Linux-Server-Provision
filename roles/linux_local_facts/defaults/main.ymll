@@ -1,0 +1,41 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines default configuration for Linux local custom facts.
+# Local facts are used by AWX to identify how each Linux server should
+# be configured and managed.
+
+# -----------------------------------------------------------------------------
+# Local facts paths
+# -----------------------------------------------------------------------------
+
+linux_local_facts_dir: /etc/ansible/facts.d
+linux_local_facts_file: "{{ linux_local_facts_dir }}/tags.fact"
+
+# -----------------------------------------------------------------------------
+# Standard Rocky Linux facts
+# -----------------------------------------------------------------------------
+# These facts are applied to every managed Rocky Linux 10 server.
+
+linux_local_facts_standard:
+  ansiblemanaged: true
+  ansibleoslinux: true
+  ansiblelinuxcommon: true
+  ansiblelinuxpulpconsumer: true
+  ansiblelinuxsplunkforwarder: true
+
+# -----------------------------------------------------------------------------
+# Patching defaults
+# -----------------------------------------------------------------------------
+# Automatic patching is the default for newly provisioned servers.
+# This can be overridden through AWX when required.
+
+linux_local_facts_automatic_patching: true
+linux_local_facts_manual_patching: false
+
+# -----------------------------------------------------------------------------
+# Production patching group
+# -----------------------------------------------------------------------------
+# Production servers can optionally be assigned to a primary or secondary
+# patching group through AWX.
+
+linux_local_facts_production_patching_group: ""

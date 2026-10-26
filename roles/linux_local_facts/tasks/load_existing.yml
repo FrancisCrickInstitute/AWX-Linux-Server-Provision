@@ -1,0 +1,23 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Creates the Ansible custom facts directory and preserves any
+# existing Linux local facts before the managed baseline is applied.
+
+- name: Ensure local facts directory exists
+  ansible.builtin.file:
+    path: "{{ linux_local_facts_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Initialise existing local facts
+  ansible.builtin.set_fact:
+    linux_local_facts_existing: {}
+
+- name: Preserve existing local facts
+  ansible.builtin.set_fact:
+    linux_local_facts_existing: "{{ ansible_local.tags }}"
+  when:
+    - ansible_local.tags is defined
+    - ansible_local.tags is mapping

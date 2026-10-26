@@ -1,0 +1,32 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Validates the target host and local-facts configuration before
+# making changes to the managed Linux custom facts.
+
+- name: Validate Rocky Linux platform
+  ansible.builtin.assert:
+    that:
+      - ansible_facts["distribution"] == "Rocky"
+      - ansible_facts["distribution_major_version"] | int >= 10
+    fail_msg: >-
+      The linux_local_facts role supports Rocky Linux 10 and newer only.
+    success_msg: >-
+      Rocky Linux {{ ansible_facts["distribution_version"] }} supported.
+
+- name: Validate local facts directory
+  ansible.builtin.assert:
+    that:
+      - linux_local_facts_dir | length > 0
+      - linux_local_facts_file | length > 0
+    fail_msg: >-
+      Local facts directory and file paths must be configured.
+
+- name: Validate production patching group
+  ansible.builtin.assert:
+    that:
+      - >-
+        linux_local_facts_production_patching_group
+        in ["", "ansibleprimary", "ansiblesecondary"]
+    fail_msg: >-
+      Production patching group must be blank, ansibleprimary,
+      or ansiblesecondary.

@@ -1,0 +1,12 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Configures and refreshes managed local Ansible facts on a
+# Rocky Linux server following VM provisioning.
+
+- name: Configure Linux local facts
+  hosts: "{{ vm_name }}"
+  become: true
+  gather_facts: true
+
+  roles:
+    - linux_local_facts

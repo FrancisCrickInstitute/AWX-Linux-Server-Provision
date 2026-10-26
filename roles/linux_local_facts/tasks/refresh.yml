@@ -1,0 +1,28 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Refreshes Ansible facts after the managed local facts file has
+# been updated and stores the refreshed tags in the Ansible fact cache.
+
+- name: Clear gathered Ansible facts
+  ansible.builtin.meta: clear_facts
+
+- name: Gather refreshed Ansible facts
+  ansible.builtin.setup:
+
+- name: Validate refreshed local facts
+  ansible.builtin.assert:
+    that:
+      - ansible_local.tags is defined
+      - ansible_local.tags is mapping
+    fail_msg: >-
+      Managed local facts could not be loaded from
+      {{ linux_local_facts_file }}.
+
+- name: Cache refreshed local facts
+  ansible.builtin.set_fact:
+    linux_local_facts_cached_tags: "{{ ansible_local.tags }}"
+    cacheable: true
+
+- name: Show managed local facts
+  ansible.builtin.debug:
+    var: linux_local_facts_cached_tags

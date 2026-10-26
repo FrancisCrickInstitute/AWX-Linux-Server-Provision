@@ -1,0 +1,12 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Writes the managed Linux local facts to the Ansible custom
+# facts file with controlled ownership and permissions.
+
+- name: Save managed local facts
+  ansible.builtin.copy:
+    content: "{{ linux_local_facts_managed | to_nice_json }}\n"
+    dest: "{{ linux_local_facts_file }}"
+    owner: root
+    group: root
+    mode: "0644"

@@ -1,0 +1,20 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines the execution order for managing Linux local custom facts.
+# Preserves existing facts, applies the Rocky Linux baseline, writes the
+# managed facts file and refreshes the Ansible fact cache.
+
+- name: Validate local facts inputs
+  ansible.builtin.import_tasks: validate.yml
+
+- name: Load existing local facts
+  ansible.builtin.import_tasks: load_existing.yml
+
+- name: Build managed local facts
+  ansible.builtin.import_tasks: build.yml
+
+- name: Save managed local facts
+  ansible.builtin.import_tasks: save.yml
+
+- name: Refresh local facts
+  ansible.builtin.import_tasks: refresh.yml
