@@ -83,3 +83,6 @@ pulp_k8_repo_repositories:
       Pulp - Rocky Linux {{ pulp_k8_repo_rocky_major_version }} EPEL
     path: epel
     gpgkey: "{{ pulp_k8_repo_epel_gpg_key }}"
+
+  pulp_k8_repo_legacy_files:
+    - "{{ pulp_k8_repo_dir }}/pulp-k8-rocky10.repo"

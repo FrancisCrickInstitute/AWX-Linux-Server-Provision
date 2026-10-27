@@ -20,3 +20,9 @@
     label: "{{ item.path }}"
   when:
     - item.path != pulp_k8_repo_file
+
+- name: Remove legacy Pulp repository files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ pulp_k8_repo_legacy_files }}"
