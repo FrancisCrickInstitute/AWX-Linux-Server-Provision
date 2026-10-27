@@ -169,15 +169,25 @@
         get_checksum: false
       register: splunk_forwarder_upgrade_unit_status
 
-    - name: Stop systemd-managed Splunk Forwarder
+    - name: Stop and disable systemd-managed Splunk Forwarder
       ansible.builtin.systemd:
         name: "{{ splunk_forwarder_service }}"
         state: stopped
+        enabled: false
       when: splunk_forwarder_upgrade_unit_status.stat.exists
 
     - name: Stop unmanaged Splunk Forwarder process
       ansible.builtin.include_tasks: ensure_stopped.yml
       when: not splunk_forwarder_upgrade_unit_status.stat.exists
+
+    - name: Remove existing SplunkForwarder systemd unit before migration
+      ansible.builtin.file:
+        path: "{{ splunk_forwarder_systemd_unit }}"
+        state: absent
+      notify: Reload systemd
+
+    - name: Apply removal of existing SplunkForwarder service
+      ansible.builtin.meta: flush_handlers
 
     - name: Upgrade Splunk Universal Forwarder package
       ansible.builtin.dnf:
