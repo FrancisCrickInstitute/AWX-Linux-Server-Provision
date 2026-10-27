@@ -1,0 +1,51 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Validates the target operating system and required patching
+# configuration before any Rocky Linux updates are applied.
+
+- name: Validate Rocky Linux operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_facts["distribution"] == "Rocky"
+      - ansible_facts["distribution_major_version"] | int >= 10
+    fail_msg: >-
+      The Rocky Linux update role supports Rocky Linux 10 and newer only.
+      Detected {{ ansible_facts["distribution"] }}
+      {{ ansible_facts["distribution_version"] }}.
+    success_msg: >-
+      Rocky Linux {{ ansible_facts["distribution_version"] }}
+      is supported for patching.
+
+- name: Validate local facts directory
+  ansible.builtin.assert:
+    that:
+      - rocky_linux_updates_custom_facts_dir | length > 0
+      - rocky_linux_updates_local_tags_file | length > 0
+    fail_msg: >-
+      Rocky Linux patching local fact paths must not be empty.
+
+- name: Validate reboot timeout
+  ansible.builtin.assert:
+    that:
+      - rocky_linux_updates_reboot_timeout | int > 0
+      - rocky_linux_updates_reboot_connect_timeout | int > 0
+    fail_msg: >-
+      Rocky Linux reboot timeout values must be greater than zero.
+  when: rocky_linux_updates_reboot_enabled | bool
+
+- name: Validate delayed reboot schedule values
+  ansible.builtin.assert:
+    that:
+      - item.value is string
+      - item.value | length > 0
+    fail_msg: >-
+      Delayed reboot schedule entries must contain a valid shutdown
+      time expression.
+  loop: >-
+    {{
+      rocky_linux_updates_custom_reboot_schedule_map
+      | dict2items
+    }}
+  when:
+    - rocky_linux_updates_reboot_enabled | bool
+    - rocky_linux_updates_custom_reboot_schedule_map | length > 0

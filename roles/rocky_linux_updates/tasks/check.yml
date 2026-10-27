@@ -1,0 +1,21 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Validates the DNF package database before Rocky Linux
+# updates are applied.
+
+- name: Check DNF package database
+  ansible.builtin.command:
+    cmd: dnf check
+  register: rocky_linux_updates_dnf_check
+  changed_when: false
+
+- name: Validate DNF package database
+  ansible.builtin.assert:
+    that:
+      - rocky_linux_updates_dnf_check.rc == 0
+    fail_msg: >-
+      DNF package database validation failed.
+      Resolve the reported package dependency or database issue
+      before running Rocky Linux patching.
+    success_msg: >-
+      DNF package database validation completed successfully.

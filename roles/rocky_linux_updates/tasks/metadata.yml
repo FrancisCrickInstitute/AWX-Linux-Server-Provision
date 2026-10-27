@@ -1,0 +1,20 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Refreshes Rocky Linux DNF repository metadata before patching.
+# Ensures enabled repositories are reachable before package updates begin.
+
+- name: Refresh DNF repository metadata
+  ansible.builtin.command:
+    cmd: dnf makecache --refresh
+  register: rocky_linux_updates_metadata_refresh
+  changed_when: false
+
+- name: Validate DNF repository metadata refresh
+  ansible.builtin.assert:
+    that:
+      - rocky_linux_updates_metadata_refresh.rc == 0
+    fail_msg: >-
+      DNF repository metadata refresh failed.
+      Check the configured Pulp repositories before continuing with patching.
+    success_msg: >-
+      DNF repository metadata refreshed successfully.

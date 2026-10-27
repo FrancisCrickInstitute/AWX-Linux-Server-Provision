@@ -1,0 +1,26 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines the execution order of tasks within the Rocky Linux
+# patching role and coordinates validation, updates, reboot handling
+# and patching fact management.
+
+- name: Validate Rocky Linux patching requirements
+  ansible.builtin.import_tasks: validate.yml
+
+- name: Refresh Rocky Linux repository metadata
+  ansible.builtin.import_tasks: metadata.yml
+
+- name: Check DNF package database
+  ansible.builtin.import_tasks: check.yml
+
+- name: Apply Rocky Linux package updates
+  ansible.builtin.import_tasks: update.yml
+
+- name: Handle Rocky Linux reboot requirements
+  ansible.builtin.import_tasks: reboot.yml
+
+- name: Record Rocky Linux patching date
+  ansible.builtin.import_tasks: patching_fact.yml
+
+- name: Verify Rocky Linux patching
+  ansible.builtin.import_tasks: verify.yml

@@ -1,0 +1,70 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Performs final validation after Rocky Linux patching.
+# Confirms repository health and verifies the lastPatching local fact.
+
+- name: Perform final DNF package database check
+  ansible.builtin.command:
+    cmd: dnf check
+  register: rocky_linux_updates_final_dnf_check
+  changed_when: false
+
+- name: Validate final DNF package database state
+  ansible.builtin.assert:
+    that:
+      - rocky_linux_updates_final_dnf_check.rc == 0
+    fail_msg: >-
+      Final DNF package database validation failed after patching.
+    success_msg: >-
+      Final DNF package database validation completed successfully.
+
+- name: Refresh final Ansible local facts
+  ansible.builtin.setup:
+    filter:
+      - ansible_local
+
+- name: Validate lastPatching local fact exists
+  ansible.builtin.assert:
+    that:
+      - ansible_facts["ansible_local"]["tags"] is defined
+      - >-
+        rocky_linux_updates_patching_fact_name
+        in ansible_facts["ansible_local"]["tags"]
+      - >-
+        ansible_facts["ansible_local"]["tags"][
+          rocky_linux_updates_patching_fact_name
+        ] == ansible_facts["date_time"]["date"]
+    fail_msg: >-
+      Rocky Linux patching completed, but the lastPatching local
+      fact could not be validated.
+    success_msg: >-
+      Rocky Linux patching validation completed successfully.
+      lastPatching is
+      {{
+        ansible_facts["ansible_local"]["tags"][
+          rocky_linux_updates_patching_fact_name
+        ]
+      }}.
+
+- name: Report Rocky Linux patching status
+  ansible.builtin.debug:
+    msg:
+      - >-
+        Rocky Linux patching completed successfully.
+      - >-
+        Reboot required:
+        {{ rocky_linux_updates_reboot_required | default(false) | bool }}.
+      - >-
+        Delayed reboot:
+        {{
+          rocky_linux_updates_delayed_reboot_host
+          | default(false)
+          | bool
+        }}.
+      - >-
+        lastPatching:
+        {{
+          ansible_facts["ansible_local"]["tags"][
+            rocky_linux_updates_patching_fact_name
+          ]
+        }}.

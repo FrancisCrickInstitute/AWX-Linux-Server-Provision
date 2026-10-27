@@ -1,0 +1,95 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Determines whether Rocky Linux requires a reboot after patching.
+# Supports immediate reboots and variable-driven delayed reboot schedules.
+
+- name: Determine whether host uses delayed reboot workflow
+  ansible.builtin.set_fact:
+    rocky_linux_updates_delayed_reboot_host: >-
+      {{
+        inventory_hostname
+        in rocky_linux_updates_custom_reboot_schedule_map
+        or inventory_hostname_short
+        in rocky_linux_updates_custom_reboot_schedule_map
+        or ansible_facts["fqdn"]
+        in rocky_linux_updates_custom_reboot_schedule_map
+      }}
+    rocky_linux_updates_delayed_reboot_time: >-
+      {{
+        rocky_linux_updates_custom_reboot_schedule_map.get(
+          inventory_hostname
+        )
+        or rocky_linux_updates_custom_reboot_schedule_map.get(
+          inventory_hostname_short
+        )
+        or rocky_linux_updates_custom_reboot_schedule_map.get(
+          ansible_facts["fqdn"]
+        )
+      }}
+
+- name: Check whether system reboot is required
+  ansible.builtin.command:
+    cmd: dnf needs-restarting
+  register: rocky_linux_updates_reboot_check
+  changed_when: false
+  failed_when:
+    - rocky_linux_updates_reboot_check.rc not in [0, 1]
+
+- name: Record reboot requirement
+  ansible.builtin.set_fact:
+    rocky_linux_updates_reboot_required: >-
+      {{
+        rocky_linux_updates_reboot_check.rc == 1
+      }}
+
+- name: Report reboot requirement
+  ansible.builtin.debug:
+    msg: >-
+      Reboot required:
+      {{ rocky_linux_updates_reboot_required | bool }}.
+
+- name: Reboot immediately when required
+  ansible.builtin.reboot:
+    reboot_timeout: "{{ rocky_linux_updates_reboot_timeout }}"
+    connect_timeout: "{{ rocky_linux_updates_reboot_connect_timeout }}"
+    test_command: "{{ rocky_linux_updates_reboot_test_command }}"
+    msg: >-
+      Reboot initiated by AWX Rocky Linux patching workflow.
+  when:
+    - rocky_linux_updates_reboot_enabled | bool
+    - rocky_linux_updates_reboot_required | bool
+    - not rocky_linux_updates_delayed_reboot_host | bool
+
+- name: Cancel existing delayed reboot when required
+  ansible.builtin.command:
+    cmd: shutdown -c
+  register: rocky_linux_updates_shutdown_cancel
+  changed_when: false
+  failed_when: false
+  when:
+    - rocky_linux_updates_reboot_enabled | bool
+    - rocky_linux_updates_reboot_required | bool
+    - rocky_linux_updates_delayed_reboot_host | bool
+
+- name: Schedule delayed reboot when required
+  ansible.builtin.command:
+    cmd: >-
+      shutdown -r {{ rocky_linux_updates_delayed_reboot_time }}
+      "Scheduled by AWX Rocky Linux patching workflow"
+  when:
+    - rocky_linux_updates_reboot_enabled | bool
+    - rocky_linux_updates_reboot_required | bool
+    - rocky_linux_updates_delayed_reboot_host | bool
+    - rocky_linux_updates_delayed_reboot_time is not none
+    - rocky_linux_updates_delayed_reboot_time | length > 0
+  changed_when: true
+
+- name: Report delayed reboot schedule
+  ansible.builtin.debug:
+    msg: >-
+      Reboot required and scheduled for
+      {{ rocky_linux_updates_delayed_reboot_time }}.
+  when:
+    - rocky_linux_updates_reboot_enabled | bool
+    - rocky_linux_updates_reboot_required | bool
+    - rocky_linux_updates_delayed_reboot_host | bool

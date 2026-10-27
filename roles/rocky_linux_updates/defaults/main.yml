@@ -1,0 +1,22 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines the default configuration values used by the Rocky Linux
+# patching role, including reboot behaviour and local patching facts.
+
+rocky_linux_updates_apply_updates: true
+
+rocky_linux_updates_reboot_enabled: true
+
+rocky_linux_updates_reboot_timeout: 900
+
+rocky_linux_updates_reboot_connect_timeout: 10
+
+rocky_linux_updates_reboot_test_command: whoami
+
+rocky_linux_updates_custom_reboot_schedule_map: {}
+
+rocky_linux_updates_custom_facts_dir: /etc/ansible/facts.d
+
+rocky_linux_updates_local_tags_file: /etc/ansible/facts.d/tags.fact
+
+rocky_linux_updates_patching_fact_name: lastPatching

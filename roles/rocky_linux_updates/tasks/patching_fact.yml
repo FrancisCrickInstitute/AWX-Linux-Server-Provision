@@ -1,0 +1,68 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Records the date of successful Rocky Linux patching in
+# the existing Ansible local facts without overwriting other tags.
+
+- name: Ensure Ansible local facts directory exists
+  ansible.builtin.file:
+    path: "{{ rocky_linux_updates_custom_facts_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Refresh Ansible local facts before updating patching date
+  ansible.builtin.setup:
+    filter:
+      - ansible_local
+
+- name: Read existing local tags
+  ansible.builtin.set_fact:
+    rocky_linux_updates_existing_tags: >-
+      {{
+        ansible_facts["ansible_local"]["tags"]
+        | default({})
+      }}
+
+- name: Build updated local tags
+  ansible.builtin.set_fact:
+    rocky_linux_updates_updated_tags: >-
+      {{
+        rocky_linux_updates_existing_tags
+        | combine(
+            {
+              rocky_linux_updates_patching_fact_name:
+                ansible_facts["date_time"]["date"]
+            }
+          )
+      }}
+
+- name: Save updated local tags
+  ansible.builtin.copy:
+    content: >-
+      {{
+        rocky_linux_updates_updated_tags
+        | to_nice_json
+      }}
+    dest: "{{ rocky_linux_updates_local_tags_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Refresh Ansible local facts after patching
+  ansible.builtin.setup:
+    filter:
+      - ansible_local
+
+- name: Validate last patching fact
+  ansible.builtin.assert:
+    that:
+      - >-
+        ansible_facts["ansible_local"]["tags"][
+          rocky_linux_updates_patching_fact_name
+        ] == ansible_facts["date_time"]["date"]
+    fail_msg: >-
+      The lastPatching local fact was not updated successfully.
+    success_msg: >-
+      The lastPatching local fact was updated successfully to
+      {{ ansible_facts["date_time"]["date"] }}.

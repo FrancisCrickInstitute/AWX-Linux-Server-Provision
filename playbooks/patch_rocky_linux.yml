@@ -1,0 +1,12 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Applies Rocky Linux 10 operating system updates to a single VM.
+# Coordinates package updates, reboot handling and lastPatching local facts.
+
+- name: Patch Rocky Linux server
+  hosts: "{{ vm_name }}"
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: rocky_linux_updates

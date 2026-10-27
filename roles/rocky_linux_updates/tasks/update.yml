@@ -1,0 +1,21 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Applies available Rocky Linux package updates using DNF.
+# Package signature verification remains enabled through the configured repositories.
+
+- name: Apply available Rocky Linux updates
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    update_only: true
+    update_cache: true
+  register: rocky_linux_updates_result
+  when: rocky_linux_updates_apply_updates | bool
+
+- name: Report Rocky Linux update result
+  ansible.builtin.debug:
+    msg: >-
+      Rocky Linux package update completed.
+      Packages changed:
+      {{ rocky_linux_updates_result.changed | default(false) }}.
+  when: rocky_linux_updates_apply_updates | bool
