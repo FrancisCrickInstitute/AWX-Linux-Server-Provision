@@ -13,6 +13,13 @@
     policy: "{{ rocky_common_core_selinux_policy }}"
     state: "{{ rocky_common_core_selinux_state }}"
 
+- name: Remove legacy SSH root-login override
+  ansible.builtin.file:
+    path: "{{ rocky_common_core_sshd_dropin_file }}"
+    state: absent
+  when: rocky_common_core_configure_ssh | bool
+  notify: Restart sshd
+
 - name: Disable SSH root login
   ansible.builtin.lineinfile:
     path: "{{ rocky_common_core_sshd_config }}"

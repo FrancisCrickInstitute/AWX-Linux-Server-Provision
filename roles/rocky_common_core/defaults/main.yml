@@ -77,6 +77,10 @@ rocky_common_core_sshd_config: /etc/ssh/sshd_config
 rocky_common_core_permit_root_login: false
 rocky_common_core_password_authentication: true
 
+rocky_common_core_sshd_dropin_dir: /etc/ssh/sshd_config.d
+rocky_common_core_sshd_dropin_file: >-
+  {{ rocky_common_core_sshd_dropin_dir }}/01-permitrootlogin.conf
+
 # -----------------------------------------------------------------------------
 # Firewall
 # -----------------------------------------------------------------------------

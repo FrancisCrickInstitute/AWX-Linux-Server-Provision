@@ -12,6 +12,34 @@
     - rocky_common_core_servicenow_password is defined
     - rocky_common_core_servicenow_password | length > 0
 
+- name: Remove legacy ServiceNow command alias from sudoers
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    regexp: '^Cmnd_Alias SNDISCOVERY\s*='
+    state: absent
+    validate: "/usr/sbin/visudo -cf %s"
+
+- name: Remove legacy ServiceNow user entry from sudoers
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    regexp: '^admin-servicenow\s+ALL=\(root\)\s+SNDISCOVERY'
+    state: absent
+    validate: "/usr/sbin/visudo -cf %s"
+
+- name: Remove legacy ServiceNow command alias from sudoers
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    regexp: '^Cmnd_Alias SNDISCOVERY\s*='
+    state: absent
+    validate: "/usr/sbin/visudo -cf %s"
+
+- name: Remove legacy ServiceNow user permission from sudoers
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    regexp: '^admin-servicenow\s+ALL=\(root\)\s+SNDISCOVERY'
+    state: absent
+    validate: "/usr/sbin/visudo -cf %s"
+
 - name: Configure ServiceNow sudo permissions
   ansible.builtin.template:
     src: servicenow-sudoers.j2
