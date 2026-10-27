@@ -1,0 +1,12 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Deploys the Ansible-managed Pulp repository configuration
+# used by Rocky Linux systems.
+
+- name: Deploy Pulp repository configuration
+  ansible.builtin.template:
+    src: pulp-k8-rocky.repo.j2
+    dest: "{{ pulp_k8_repo_file }}"
+    owner: root
+    group: root
+    mode: "0644"

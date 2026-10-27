@@ -1,0 +1,12 @@
+# This file is managed by Ansible.
+# Manual changes will be overwritten.
+
+{% for repo in pulp_k8_repo_repositories.values() %}
+[{{ repo.id }}]
+name={{ repo.name }}
+baseurl={{ pulp_k8_repo_base_url }}/{{ repo.path }}/
+enabled={{ 1 if pulp_k8_repo_enabled else 0 }}
+gpgcheck={{ 1 if pulp_k8_repo_gpgcheck else 0 }}
+gpgkey={{ repo.gpgkey }}
+
+{% endfor %}

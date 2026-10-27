@@ -1,0 +1,32 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Validates that the target host and repository configuration
+# are suitable before making changes to the system repositories.
+
+- name: Validate Rocky Linux platform
+  ansible.builtin.assert:
+    that:
+      - ansible_facts["distribution"] == "Rocky"
+      - ansible_facts["distribution_major_version"] | int >= 10
+    fail_msg: >-
+      The pulp_k8_repo role supports Rocky Linux 10 and newer only.
+    success_msg: >-
+      Rocky Linux {{ ansible_facts["distribution_version"] }} supported.
+
+- name: Validate detected Rocky Linux major version
+  ansible.builtin.assert:
+    that:
+      - pulp_k8_repo_rocky_major_version | string | length > 0
+    fail_msg: >-
+      Unable to determine the Rocky Linux major version.
+
+- name: Validate Pulp repository configuration
+  ansible.builtin.assert:
+    that:
+      - pulp_k8_repo_base_url | length > 0
+      - pulp_k8_repo_dir | length > 0
+      - pulp_k8_repo_file | length > 0
+      - pulp_k8_repo_repositories is mapping
+      - pulp_k8_repo_repositories | length > 0
+    fail_msg: >-
+      The Pulp repository configuration is incomplete.

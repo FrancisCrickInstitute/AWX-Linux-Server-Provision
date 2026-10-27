@@ -1,0 +1,22 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Validates that the expected Ansible-managed Pulp repositories
+# are enabled and available after repository configuration.
+
+- name: Get enabled DNF repositories
+  ansible.builtin.command:
+    cmd: dnf repolist --enabled
+  register: pulp_k8_repo_enabled_repos
+  changed_when: false
+
+- name: Validate managed Pulp repositories are enabled
+  ansible.builtin.assert:
+    that:
+      - item.value.id in pulp_k8_repo_enabled_repos.stdout
+    fail_msg: >-
+      Expected Pulp repository {{ item.value.id }} is not enabled.
+    success_msg: >-
+      Pulp repository {{ item.value.id }} is enabled.
+  loop: "{{ pulp_k8_repo_repositories | dict2items }}"
+  loop_control:
+    label: "{{ item.value.id }}"

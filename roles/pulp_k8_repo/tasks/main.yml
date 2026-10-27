@@ -1,0 +1,19 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines the execution order for configuring Rocky Linux
+# systems to use the managed Pulp repositories.
+
+- name: Validate Rocky Linux platform
+  ansible.builtin.import_tasks: validate.yml
+
+- name: Disable existing repositories
+  ansible.builtin.import_tasks: disable_existing.yml
+
+- name: Configure Pulp repositories
+  ansible.builtin.import_tasks: configure.yml
+
+- name: Refresh DNF metadata
+  ansible.builtin.import_tasks: metadata.yml
+
+- name: Validate Pulp repositories
+  ansible.builtin.import_tasks: validate_repos.yml

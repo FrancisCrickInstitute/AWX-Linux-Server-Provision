@@ -1,0 +1,85 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines configurable defaults for Rocky Linux Pulp repository
+# management. The role is designed to support future Rocky Linux releases
+# without requiring separate roles for each major version.
+
+# -----------------------------------------------------------------------------
+# Rocky Linux version
+# -----------------------------------------------------------------------------
+
+pulp_k8_repo_rocky_major_version: >-
+  {{ ansible_facts["distribution_major_version"] }}
+
+# -----------------------------------------------------------------------------
+# Repository paths
+# -----------------------------------------------------------------------------
+
+pulp_k8_repo_dir: /etc/yum.repos.d
+
+pulp_k8_repo_file: >-
+  {{ pulp_k8_repo_dir }}/pulp-k8-rocky.repo
+
+# -----------------------------------------------------------------------------
+# Pulp endpoint
+# -----------------------------------------------------------------------------
+
+pulp_k8_repo_base_url: >-
+  https://pulp-k8.dev.thecrick.org/pulp/content/rocky{{ pulp_k8_repo_rocky_major_version }}
+
+# -----------------------------------------------------------------------------
+# Repository behaviour
+# -----------------------------------------------------------------------------
+
+pulp_k8_repo_enabled: true
+pulp_k8_repo_gpgcheck: true
+
+# -----------------------------------------------------------------------------
+# GPG keys
+# -----------------------------------------------------------------------------
+
+pulp_k8_repo_rocky_gpg_key: >-
+  file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rockyofficial
+
+pulp_k8_repo_epel_gpg_key: >-
+  file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{ pulp_k8_repo_rocky_major_version }}
+
+# -----------------------------------------------------------------------------
+# Managed repositories
+# -----------------------------------------------------------------------------
+
+pulp_k8_repo_repositories:
+  baseos:
+    id: pulp-k8-baseos
+    name: >-
+      Pulp - Rocky Linux {{ pulp_k8_repo_rocky_major_version }} BaseOS
+    path: baseos
+    gpgkey: "{{ pulp_k8_repo_rocky_gpg_key }}"
+
+  appstream:
+    id: pulp-k8-appstream
+    name: >-
+      Pulp - Rocky Linux {{ pulp_k8_repo_rocky_major_version }} AppStream
+    path: appstream
+    gpgkey: "{{ pulp_k8_repo_rocky_gpg_key }}"
+
+  extras:
+    id: pulp-k8-extras
+    name: >-
+      Pulp - Rocky Linux {{ pulp_k8_repo_rocky_major_version }} Extras
+    path: extras
+    gpgkey: "{{ pulp_k8_repo_rocky_gpg_key }}"
+
+  crb:
+    id: pulp-k8-crb
+    name: >-
+      Pulp - Rocky Linux {{ pulp_k8_repo_rocky_major_version }} CRB
+    path: crb
+    gpgkey: "{{ pulp_k8_repo_rocky_gpg_key }}"
+
+  epel:
+    id: pulp-k8-epel
+    name: >-
+      Pulp - Rocky Linux {{ pulp_k8_repo_rocky_major_version }} EPEL
+    path: epel
+    gpgkey: "{{ pulp_k8_repo_epel_gpg_key }}"

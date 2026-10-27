@@ -1,0 +1,12 @@
+---
+# Created by Adam Spandel, October 2026.
+# Purpose: Configures a Rocky Linux server to use the managed Pulp
+# repositories following VM provisioning and local-facts configuration.
+
+- name: Configure Rocky Linux Pulp repositories
+  hosts: "{{ vm_name }}"
+  become: true
+  gather_facts: true
+
+  roles:
+    - pulp_k8_repo

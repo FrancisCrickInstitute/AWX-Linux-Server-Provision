@@ -1,0 +1,22 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Disables repositories that are not managed by the Pulp role
+# while leaving the managed Pulp repository file untouched.
+
+- name: Find existing repository files
+  ansible.builtin.find:
+    paths: "{{ pulp_k8_repo_dir }}"
+    patterns: "*.repo"
+    file_type: file
+  register: pulp_k8_repo_existing_files
+
+- name: Disable repositories in unmanaged repository files
+  ansible.builtin.replace:
+    path: "{{ item.path }}"
+    regexp: '^enabled\s*=\s*1\s*$'
+    replace: "enabled=0"
+  loop: "{{ pulp_k8_repo_existing_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  when:
+    - item.path != pulp_k8_repo_file

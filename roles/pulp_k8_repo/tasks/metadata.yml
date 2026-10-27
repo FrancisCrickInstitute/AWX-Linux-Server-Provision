@@ -1,0 +1,14 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Clears stale DNF metadata and rebuilds the package metadata
+# cache after the managed Pulp repository configuration has changed.
+
+- name: Clean DNF cache
+  ansible.builtin.command:
+    cmd: dnf clean all
+  changed_when: false
+
+- name: Rebuild DNF metadata cache
+  ansible.builtin.command:
+    cmd: dnf makecache
+  changed_when: false

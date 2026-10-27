@@ -1,0 +1,12 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines metadata for the Rocky Linux Pulp repository role.
+
+galaxy_info:
+  role_name: pulp_k8_repo
+  author: Francis Crick Institute
+  description: Configure managed Pulp repositories for Rocky Linux servers
+  license: proprietary
+  min_ansible_version: "2.16"
+
+dependencies: []
