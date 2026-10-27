@@ -1,0 +1,16 @@
+---
+# Created by Adam Spandel, October 2026.
+# Purpose: Defines metadata and collection dependencies for the
+# CrowdStrike Falcon sensor role.
+
+galaxy_info:
+  role_name: crowdstrike
+  author: Francis Crick Institute
+  description: Install and configure the CrowdStrike Falcon sensor on Rocky Linux
+  license: proprietary
+  min_ansible_version: "2.16"
+
+dependencies: []
+
+collections:
+  - crowdstrike.falcon

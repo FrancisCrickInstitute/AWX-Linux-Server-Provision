@@ -1,0 +1,25 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines configurable defaults for CrowdStrike Falcon sensor
+# installation and configuration on managed Rocky Linux servers.
+
+# -----------------------------------------------------------------------------
+# CrowdStrike Falcon installation
+# -----------------------------------------------------------------------------
+
+crowdstrike_falcon_install_method: api
+crowdstrike_falcon_cloud: eu-1
+
+# -----------------------------------------------------------------------------
+# CrowdStrike API behaviour
+# -----------------------------------------------------------------------------
+
+crowdstrike_falcon_api_enable_no_log: false
+crowdstrike_falcon_allow_downgrade: false
+crowdstrike_falcon_gpg_key_check: true
+
+# -----------------------------------------------------------------------------
+# Sensor configuration
+# -----------------------------------------------------------------------------
+
+crowdstrike_falcon_tags: "linux_server"

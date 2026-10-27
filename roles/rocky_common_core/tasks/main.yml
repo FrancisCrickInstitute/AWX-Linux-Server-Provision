@@ -1,0 +1,30 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines the execution order for the Rocky Linux Common Core role.
+# Applies the standard operating-system baseline after repository
+# configuration and before workload-specific configuration.
+
+- name: Validate Rocky Linux platform
+  ansible.builtin.import_tasks: validate.yml
+
+- name: Configure standard accounts
+  ansible.builtin.import_tasks: users.yml
+  when: rocky_common_core_configure_accounts | bool
+
+- name: Configure MOTD
+  ansible.builtin.import_tasks: motd.yml
+  when: rocky_common_core_configure_motd | bool
+
+- name: Install core packages
+  ansible.builtin.import_tasks: packages.yml
+
+- name: Configure security baseline
+  ansible.builtin.import_tasks: security.yml
+
+- name: Configure CrowdStrike
+  ansible.builtin.import_tasks: crowdstrike.yml
+  when: rocky_common_core_configure_crowdstrike | bool
+
+- name: Configure ServiceNow CMDB
+  ansible.builtin.import_tasks: servicenow.yml
+  when: rocky_common_core_configure_servicenow | bool

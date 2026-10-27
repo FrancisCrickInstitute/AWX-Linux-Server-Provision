@@ -1,0 +1,73 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Applies the standard Rocky Linux security baseline, including
+# SELinux, SSH access, firewall restrictions and Postfix relay configuration.
+
+- name: Remove SNMP package
+  ansible.builtin.dnf:
+    name: net-snmp
+    state: absent
+
+- name: Configure SELinux
+  ansible.posix.selinux:
+    policy: "{{ rocky_common_core_selinux_policy }}"
+    state: "{{ rocky_common_core_selinux_state }}"
+
+- name: Disable SSH root login
+  ansible.builtin.lineinfile:
+    path: "{{ rocky_common_core_sshd_config }}"
+    regexp: '^#?PermitRootLogin'
+    line: "PermitRootLogin no"
+    state: present
+    validate: "/usr/sbin/sshd -t -f %s"
+  when: rocky_common_core_configure_ssh | bool
+  notify: Restart sshd
+
+- name: Configure SSH password authentication
+  ansible.builtin.lineinfile:
+    path: "{{ rocky_common_core_sshd_config }}"
+    regexp: '^#?PasswordAuthentication'
+    line: >-
+      PasswordAuthentication
+      {{ 'yes' if rocky_common_core_password_authentication else 'no' }}
+    state: present
+    validate: "/usr/sbin/sshd -t -f %s"
+  when: rocky_common_core_configure_ssh | bool
+  notify: Restart sshd
+
+- name: Allow SSH from trusted networks
+  ansible.posix.firewalld:
+    rich_rule: >-
+      rule family="ipv4"
+      source address="{{ item }}"
+      service name="ssh"
+      accept
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ rocky_common_core_ssh_allowed_networks }}"
+  when: rocky_common_core_configure_firewall | bool
+
+- name: Disable unrestricted SSH firewalld service
+  ansible.posix.firewalld:
+    service: ssh
+    permanent: true
+    immediate: true
+    state: disabled
+  when: rocky_common_core_configure_firewall | bool
+
+- name: Configure Postfix relay host
+  ansible.builtin.lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: '^relayhost\s*='
+    line: "relayhost = {{ rocky_common_core_postfix_relayhost }}"
+    state: present
+  when: rocky_common_core_configure_postfix | bool
+  notify: Restart postfix
+
+- name: Ensure Postfix is enabled and running
+  ansible.builtin.systemd:
+    name: postfix
+    enabled: true
+    state: started
+  when: rocky_common_core_configure_postfix | bool

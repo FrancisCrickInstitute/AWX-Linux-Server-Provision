@@ -1,0 +1,22 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Configures the ServiceNow CMDB discovery account and grants
+# only the commands required for infrastructure discovery.
+
+- name: Configure ServiceNow CMDB account
+  ansible.builtin.user:
+    name: "{{ rocky_common_core_servicenow_user }}"
+    password: "{{ rocky_common_core_servicenow_password }}"
+    state: present
+  when:
+    - rocky_common_core_servicenow_password is defined
+    - rocky_common_core_servicenow_password | length > 0
+
+- name: Configure ServiceNow sudo permissions
+  ansible.builtin.template:
+    src: servicenow-sudoers.j2
+    dest: /etc/sudoers.d/servicenow
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "/usr/sbin/visudo -cf %s"

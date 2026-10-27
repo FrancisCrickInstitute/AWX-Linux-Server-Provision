@@ -1,0 +1,12 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Deploys the standard Rocky Linux login MOTD showing the
+# server FQDN and operating-system release.
+
+- name: Deploy Rocky Linux MOTD
+  ansible.builtin.copy:
+    src: motd.sh
+    dest: "{{ rocky_common_core_motd_path }}"
+    owner: root
+    group: root
+    mode: "0644"

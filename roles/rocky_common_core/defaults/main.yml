@@ -1,0 +1,124 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines configurable defaults for the Rocky Linux Common Core role.
+# Provides the standard packages and baseline configuration applied to
+# managed Rocky Linux servers.
+
+# -----------------------------------------------------------------------------
+# Core packages
+# -----------------------------------------------------------------------------
+
+rocky_common_core_packages:
+  - acl
+  - adcli
+  - atop
+  - bash-completion
+  - bind-utils
+  - bzip2
+  - cifs-utils
+  - dos2unix
+  - gcc
+  - gdisk
+  - git
+  - htop
+  - kernel-devel
+  - kernel-headers
+  - libnsl
+  - plocate
+  - nfs-utils
+  - oddjob
+  - oddjob-mkhomedir
+  - open-vm-tools
+  - parted
+  - policycoreutils-python-utils
+  - postfix
+  - python3-libsemanage
+  - python3-pip
+  - python3-setuptools
+  - realmd
+  - sudo
+  - samba-common
+  - samba-common-tools
+  - sg3_utils
+  - sssd
+  - strace
+  - sysstat
+  - tree
+  - unzip
+  - vim
+  - wget
+  - zip
+
+# -----------------------------------------------------------------------------
+# User configuration
+# -----------------------------------------------------------------------------
+
+rocky_common_core_configure_accounts: true
+
+rocky_common_core_root_user: root
+rocky_common_core_ansible_user: ansible
+
+rocky_common_core_install_vimrc: true
+
+# -----------------------------------------------------------------------------
+# MOTD
+# -----------------------------------------------------------------------------
+
+rocky_common_core_configure_motd: true
+rocky_common_core_motd_path: /etc/profile.d/motd.sh
+
+# -----------------------------------------------------------------------------
+# SSH baseline
+# -----------------------------------------------------------------------------
+
+rocky_common_core_configure_ssh: true
+rocky_common_core_sshd_config: /etc/ssh/sshd_config
+
+rocky_common_core_permit_root_login: false
+rocky_common_core_password_authentication: true
+
+# -----------------------------------------------------------------------------
+# Firewall
+# -----------------------------------------------------------------------------
+
+rocky_common_core_configure_firewall: true
+
+rocky_common_core_ssh_allowed_networks:
+  - 10.0.0.0/8
+  - 172.16.0.0/16
+
+# -----------------------------------------------------------------------------
+# SELinux
+# -----------------------------------------------------------------------------
+
+# Do not automatically weaken SELinux on new Rocky Linux builds.
+# Any change from enforcing should be an explicit operational decision.
+
+rocky_common_core_selinux_state: permissive
+rocky_common_core_selinux_policy: targeted
+
+# -----------------------------------------------------------------------------
+# Postfix relay
+# -----------------------------------------------------------------------------
+
+rocky_common_core_configure_postfix: true
+rocky_common_core_postfix_relayhost: "[smtp.thecrick.org]"
+
+# -----------------------------------------------------------------------------
+# CrowdStrike
+# -----------------------------------------------------------------------------
+
+rocky_common_core_configure_crowdstrike: true
+
+# -----------------------------------------------------------------------------
+# ServiceNow CMDB
+# -----------------------------------------------------------------------------
+
+rocky_common_core_configure_servicenow: true
+rocky_common_core_servicenow_user: admin-servicenow
+
+rocky_common_core_servicenow_sudo_commands:
+  - /sbin/dmidecode
+  - /sbin/fdisk -l
+  - /sbin/lsof
+  - /sbin/dmsetup

@@ -1,0 +1,6 @@
+# This file is managed by Ansible.
+# Manual changes will be overwritten.
+
+Cmnd_Alias SNDISCOVERY = {{ rocky_common_core_servicenow_sudo_commands | join(', ') }}
+
+{{ rocky_common_core_servicenow_user }} ALL=(root) SNDISCOVERY

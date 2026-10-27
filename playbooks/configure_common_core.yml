@@ -1,0 +1,12 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Applies the standard Common Core baseline to a managed
+# Rocky Linux server after local facts and Pulp repositories are configured.
+
+- name: Configure Rocky Linux Common Core
+  hosts: "{{ vm_name }}"
+  become: true
+  gather_facts: true
+
+  roles:
+    - rocky_common_core

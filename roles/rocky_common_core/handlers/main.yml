@@ -1,0 +1,14 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines service handlers used by the Rocky Linux Common Core role.
+# Services are restarted only when their managed configuration changes.
+
+- name: Restart sshd
+  ansible.builtin.systemd:
+    name: sshd
+    state: restarted
+
+- name: Restart postfix
+  ansible.builtin.systemd:
+    name: postfix
+    state: restarted

@@ -1,0 +1,57 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Validates that the target host is a supported Rocky Linux
+# system before applying the Common Core baseline.
+
+- name: Validate Rocky Linux platform
+  ansible.builtin.assert:
+    that:
+      - ansible_facts["distribution"] == "Rocky"
+      - ansible_facts["distribution_major_version"] | int >= 10
+    fail_msg: >-
+      The rocky_common_core role supports Rocky Linux 10 and newer only.
+    success_msg: >-
+      Rocky Linux {{ ansible_facts["distribution_version"] }} supported.
+
+- name: Validate core package configuration
+  ansible.builtin.assert:
+    that:
+      - rocky_common_core_packages is sequence
+      - rocky_common_core_packages | length > 0
+    fail_msg: >-
+      Rocky Linux Common Core package configuration is empty or invalid.
+
+- name: Validate SSH allowed networks
+  ansible.builtin.assert:
+    that:
+      - rocky_common_core_ssh_allowed_networks is sequence
+      - rocky_common_core_ssh_allowed_networks | length > 0
+    fail_msg: >-
+      At least one trusted SSH network must be configured.
+
+- name: Validate SELinux configuration
+  ansible.builtin.assert:
+    that:
+      - rocky_common_core_selinux_state in ["enforcing", "permissive"]
+      - rocky_common_core_selinux_policy | length > 0
+    fail_msg: >-
+      SELinux state must be enforcing or permissive and a policy
+      must be configured.
+
+- name: Validate Postfix relay configuration
+  ansible.builtin.assert:
+    that:
+      - rocky_common_core_postfix_relayhost | length > 0
+    fail_msg: >-
+      A Postfix relay host must be configured.
+  when: rocky_common_core_configure_postfix | bool
+
+- name: Validate ServiceNow configuration
+  ansible.builtin.assert:
+    that:
+      - rocky_common_core_servicenow_user | length > 0
+      - rocky_common_core_servicenow_sudo_commands is sequence
+      - rocky_common_core_servicenow_sudo_commands | length > 0
+    fail_msg: >-
+      ServiceNow CMDB account configuration is incomplete.
+  when: rocky_common_core_configure_servicenow | bool

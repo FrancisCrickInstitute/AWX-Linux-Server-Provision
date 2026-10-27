@@ -1,0 +1,12 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines metadata for the Rocky Linux Common Core role.
+
+galaxy_info:
+  role_name: rocky_common_core
+  author: Francis Crick Institute
+  description: Apply the standard managed-server baseline to Rocky Linux
+  license: proprietary
+  min_ansible_version: "2.16"
+
+dependencies: []

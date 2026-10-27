@@ -1,0 +1,105 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Installs, configures and validates the CrowdStrike Falcon sensor
+# on supported Rocky Linux servers.
+#
+# Sensor installation uses the upstream crowdstrike.falcon collection.
+# Sensor configuration is performed directly with falconctl to avoid
+# querying deprecated Falcon sensor options.
+
+- name: Validate CrowdStrike platform
+  ansible.builtin.assert:
+    that:
+      - ansible_system == "Linux"
+      - ansible_distribution == "Rocky"
+      - ansible_distribution_major_version | int >= 10
+    fail_msg: >-
+      The crowdstrike role supports Rocky Linux 10 and newer only.
+      Detected: {{ ansible_system }} /
+      {{ ansible_distribution | default("?") }}
+      {{ ansible_distribution_major_version | default("?") }}.
+    success_msg: >-
+      Rocky Linux {{ ansible_distribution_version }} supported.
+
+- name: Load vaulted CrowdStrike credentials
+  ansible.builtin.include_vars:
+    file: vault.yml
+
+- name: Validate CrowdStrike credentials
+  ansible.builtin.assert:
+    that:
+      - falcon_client_id is defined
+      - falcon_client_id | length > 0
+      - falcon_client_secret is defined
+      - falcon_client_secret | length > 0
+      - falcon_cid is defined
+      - falcon_cid | length > 0
+      - falcon_provisioning_token is defined
+      - falcon_provisioning_token | length > 0
+    fail_msg: >-
+      One or more required CrowdStrike Falcon credentials are missing.
+
+- name: Ensure CrowdStrike API delegation does not use privilege escalation
+  ansible.builtin.add_host:
+    name: localhost
+    ansible_connection: local
+    ansible_become: false
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+  become: false
+  changed_when: false
+  run_once: true
+
+- name: Install or upgrade CrowdStrike Falcon sensor
+  ansible.builtin.include_role:
+    name: crowdstrike.falcon.falcon_install
+  vars:
+    falcon_install_method: "{{ crowdstrike_falcon_install_method }}"
+    falcon_cloud: "{{ crowdstrike_falcon_cloud }}"
+    falcon_api_enable_no_log: "{{ crowdstrike_falcon_api_enable_no_log }}"
+    falcon_allow_downgrade: "{{ crowdstrike_falcon_allow_downgrade }}"
+    falcon_gpg_key_check: "{{ crowdstrike_falcon_gpg_key_check }}"
+  tags:
+    - cs_install
+    - cs_upgrade
+
+- name: Configure CrowdStrike Falcon sensor
+  crowdstrike.falcon.falconctl:
+    cid: "{{ falcon_cid }}"
+    provisioning_token: >-
+      {{ falcon_provisioning_token | default(omit, true) }}
+    tags: "{{ crowdstrike_falcon_tags | default(omit, true) }}"
+    state: present
+  register: crowdstrike_falconctl_result
+  tags:
+    - cs_configure
+
+- name: Read CrowdStrike Falcon CID
+  crowdstrike.falcon.falconctl_info:
+    name:
+      - cid
+  register: crowdstrike_falcon_info
+  tags:
+    - cs_configure
+
+- name: Validate CrowdStrike Falcon CID
+  ansible.builtin.assert:
+    that:
+      - >-
+        crowdstrike_falcon_info.falconctl_info.cid
+        | default("", true)
+        | length > 0
+    fail_msg: >-
+      CrowdStrike Falcon sensor is installed but no configured CID
+      was returned by falconctl.
+    success_msg: >-
+      CrowdStrike Falcon sensor CID is configured.
+  tags:
+    - cs_configure
+
+- name: Ensure CrowdStrike Falcon sensor is enabled and running
+  ansible.builtin.service:
+    name: falcon-sensor
+    state: started
+    enabled: true
+  tags:
+    - cs_configure

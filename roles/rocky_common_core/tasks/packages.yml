@@ -1,0 +1,9 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Installs the standard package baseline required on managed
+# Rocky Linux servers using the repositories configured by the Pulp role.
+
+- name: Install Rocky Linux Common Core packages
+  ansible.builtin.dnf:
+    name: "{{ rocky_common_core_packages }}"
+    state: present

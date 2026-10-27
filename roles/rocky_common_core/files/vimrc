@@ -1,0 +1,11 @@
+autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
+filetype plugin indent on
+
+" Show existing tabs with a width of 4 spaces
+set tabstop=4
+
+" When indenting with '>', use a width of 4 spaces
+set shiftwidth=4
+
+" When pressing Tab, insert spaces rather than a tab character
+set expandtab

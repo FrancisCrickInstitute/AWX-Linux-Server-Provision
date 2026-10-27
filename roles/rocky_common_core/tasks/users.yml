@@ -1,0 +1,40 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Configures the standard local service accounts and shell
+# environment used on managed Rocky Linux servers.
+
+- name: Configure root account password
+  ansible.builtin.user:
+    name: "{{ rocky_common_core_root_user }}"
+    password: "{{ rocky_common_core_root_password }}"
+    state: present
+  when:
+    - rocky_common_core_root_password is defined
+    - rocky_common_core_root_password | length > 0
+
+- name: Configure Ansible account password
+  ansible.builtin.user:
+    name: "{{ rocky_common_core_ansible_user }}"
+    password: "{{ rocky_common_core_ansible_password }}"
+    state: present
+  when:
+    - rocky_common_core_ansible_password is defined
+    - rocky_common_core_ansible_password | length > 0
+
+- name: Deploy vim configuration for root
+  ansible.builtin.copy:
+    src: vimrc
+    dest: "/root/.vimrc"
+    owner: root
+    group: root
+    mode: "0644"
+  when: rocky_common_core_install_vimrc | bool
+
+- name: Deploy vim configuration for Ansible user
+  ansible.builtin.copy:
+    src: vimrc
+    dest: "/home/{{ rocky_common_core_ansible_user }}/.vimrc"
+    owner: "{{ rocky_common_core_ansible_user }}"
+    group: "{{ rocky_common_core_ansible_user }}"
+    mode: "0644"
+  when: rocky_common_core_install_vimrc | bool

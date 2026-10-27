@@ -1,0 +1,8 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Applies the standard CrowdStrike Falcon sensor configuration
+# through the dedicated CrowdStrike role.
+
+- name: Configure CrowdStrike Falcon sensor
+  ansible.builtin.include_role:
+    name: crowdstrike
