@@ -6,7 +6,7 @@
 - name: Check whether Splunk has already been initialised
   ansible.builtin.stat:
     path: "{{ splunk_forwarder_home }}/etc/passwd"
-  register: splunk_forwarder_configuration_initialised
+  register: splunk_forwarder_initialised
 
 - name: Deploy initial Splunk administrator credentials
   ansible.builtin.template:
@@ -15,8 +15,21 @@
     owner: "{{ splunk_forwarder_user }}"
     group: "{{ splunk_forwarder_group }}"
     mode: "0600"
-  when: not splunk_forwarder_configuration_initialised.stat.exists
+  when: not splunk_forwarder_initialised.stat.exists
   no_log: true
+
+- name: Start Splunk for initialisation
+  ansible.builtin.command:
+    cmd: >-
+      {{ splunk_forwarder_home }}/bin/splunk start
+      --accept-license
+      --answer-yes
+      --no-prompt
+  become: true
+  become_user: "{{ splunk_forwarder_user }}"
+  timeout: "{{ splunk_forwarder_cli_timeout }}"
+  when: not splunk_forwarder_initialised.stat.exists
+  changed_when: true
 
 - name: Stop Splunk after initialisation
   ansible.builtin.command:
