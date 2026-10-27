@@ -67,9 +67,15 @@
     cid: "{{ falcon_cid }}"
     provisioning_token: >-
       {{ falcon_provisioning_token | default(omit, true) }}
-    tags: "{{ crowdstrike_falcon_tags | default(omit, true) }}"
+    tags: >-
+      {{
+        crowdstrike_falcon_tags
+        if crowdstrike_falcon_manage_tags | bool
+        else omit
+      }}
     state: present
   register: crowdstrike_falconctl_result
+  no_log: true
   tags:
     - cs_configure
 

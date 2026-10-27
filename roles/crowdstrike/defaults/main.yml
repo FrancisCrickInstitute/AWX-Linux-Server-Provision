@@ -22,4 +22,5 @@ crowdstrike_falcon_gpg_key_check: true
 # Sensor configuration
 # -----------------------------------------------------------------------------
 
+crowdstrike_falcon_manage_tags: false
 crowdstrike_falcon_tags: "linux_server"
