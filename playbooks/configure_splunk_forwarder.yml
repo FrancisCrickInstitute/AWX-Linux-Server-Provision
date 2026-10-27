@@ -1,0 +1,12 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Installs and configures the Splunk Universal Forwarder on a
+# managed Rocky Linux server following Common Core configuration.
+
+- name: Configure Splunk Universal Forwarder
+  hosts: "{{ vm_name }}"
+  become: true
+  gather_facts: true
+
+  roles:
+    - splunk_forwarder

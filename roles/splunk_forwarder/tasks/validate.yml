@@ -1,0 +1,58 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Validates the target platform and required Splunk Universal
+# Forwarder configuration before making changes to the server.
+
+- name: Validate Rocky Linux platform
+  ansible.builtin.assert:
+    that:
+      - ansible_system == "Linux"
+      - ansible_distribution == "Rocky"
+      - ansible_distribution_major_version | int >= 10
+      - ansible_service_mgr == "systemd"
+    fail_msg: >-
+      The splunk_forwarder role supports systemd-based Rocky Linux
+      10 and newer only.
+    success_msg: >-
+      Rocky Linux {{ ansible_distribution_version }} supported.
+
+- name: Validate Splunk Forwarder installation configuration
+  ansible.builtin.assert:
+    that:
+      - splunk_forwarder_rpm | length > 0
+      - splunk_forwarder_target_version | length > 0
+      - splunk_forwarder_home | length > 0
+      - splunk_forwarder_user | length > 0
+      - splunk_forwarder_group | length > 0
+      - splunk_forwarder_service | length > 0
+    fail_msg: >-
+      Splunk Universal Forwarder installation configuration is incomplete.
+
+- name: Validate Splunk Deployment Server configuration
+  ansible.builtin.assert:
+    that:
+      - splunk_forwarder_deployment_server | length > 0
+      - splunk_forwarder_deployment_server_port | int > 0
+      - splunk_forwarder_deployment_server_port | int <= 65535
+    fail_msg: >-
+      Splunk Deployment Server configuration is invalid.
+
+- name: Validate Splunk firewall configuration
+  ansible.builtin.assert:
+    that:
+      - splunk_forwarder_firewall_ports is sequence
+      - splunk_forwarder_firewall_ports | length > 0
+      - splunk_forwarder_firewall_zone | length > 0
+    fail_msg: >-
+      Splunk Forwarder firewall configuration is incomplete.
+  when: splunk_forwarder_configure_firewall | bool
+
+- name: Validate Splunk Forwarder credentials
+  ansible.builtin.assert:
+    that:
+      - splunk_forwarder_admin_password is defined
+      - splunk_forwarder_admin_password | length > 0
+      - splunk_forwarder_local_password is defined
+      - splunk_forwarder_local_password | length > 0
+    fail_msg: >-
+      Required Splunk Forwarder Vault credentials are missing.

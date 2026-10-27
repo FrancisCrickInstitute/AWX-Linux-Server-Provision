@@ -1,0 +1,22 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines service handlers for Splunk Universal Forwarder
+# configuration changes.
+
+- name: Restart Splunk Forwarder
+  ansible.builtin.systemd:
+    name: "{{ splunk_forwarder_service }}"
+    state: restarted
+  when:
+    - splunk_forwarder_service_restart_on_config_change | bool
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+# auditd deliberately requires the vendor-supported service command rather
+# than a systemctl restart on Rocky Linux.
+- name: Restart auditd  # noqa command-instead-of-module
+  ansible.builtin.command:
+    cmd: /sbin/service auditd restart
+  changed_when: true

@@ -1,0 +1,15 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Performs a controlled upgrade of an existing Splunk Universal
+# Forwarder installation using the dedicated upgrade path.
+
+- name: Upgrade Splunk Universal Forwarder
+  hosts: "{{ vm_name }}"
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Run controlled Splunk Forwarder upgrade
+      ansible.builtin.include_role:
+        name: splunk_forwarder
+        tasks_from: upgrade.yml

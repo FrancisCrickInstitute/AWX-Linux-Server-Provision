@@ -1,0 +1,330 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Performs a controlled upgrade or service repair of an existing
+# Splunk Universal Forwarder installation.
+#
+# This task file is not imported by the normal role execution path.
+# It must be invoked explicitly for controlled upgrade operations.
+
+- name: Gather installed package facts
+  ansible.builtin.package_facts:
+    manager: rpm
+
+- name: Record installed Splunk Forwarder version
+  ansible.builtin.set_fact:
+    splunk_forwarder_installed_version: >-
+      {{
+        ansible_facts.packages["splunkforwarder"][0].version
+        if "splunkforwarder" in ansible_facts.packages
+        else ""
+      }}
+
+- name: Validate existing Splunk Forwarder installation
+  ansible.builtin.assert:
+    that:
+      - splunk_forwarder_installed_version | length > 0
+    fail_msg: >-
+      Splunk Universal Forwarder is not currently installed.
+      Use the normal splunk_forwarder role for a fresh installation.
+
+- name: Report Splunk Forwarder versions
+  ansible.builtin.debug:
+    msg: >-
+      Installed: {{ splunk_forwarder_installed_version }}
+      / Target: {{ splunk_forwarder_target_version }}
+
+- name: Determine whether Splunk requires an upgrade
+  ansible.builtin.set_fact:
+    splunk_forwarder_upgrade_required: >-
+      {{
+        splunk_forwarder_installed_version
+        is version(splunk_forwarder_target_version, "<")
+      }}
+
+- name: Gather Splunk Forwarder service facts
+  ansible.builtin.service_facts:
+
+- name: Record Splunk Forwarder service state
+  ansible.builtin.set_fact:
+    splunk_forwarder_upgrade_service_active: >-
+      {{
+        (
+          ansible_facts.services.get(
+            splunk_forwarder_service + ".service",
+            {}
+          )
+        ).get("state", "unknown")
+      }}
+    splunk_forwarder_upgrade_service_enabled: >-
+      {{
+        (
+          ansible_facts.services.get(
+            splunk_forwarder_service + ".service",
+            {}
+          )
+        ).get("status", "unknown")
+      }}
+
+- name: Report healthy Splunk Forwarder installation
+  ansible.builtin.debug:
+    msg: >-
+      Splunk Universal Forwarder
+      {{ splunk_forwarder_installed_version }} is already at or above
+      the required version, and the service is running and enabled.
+  when:
+    - not splunk_forwarder_upgrade_required | bool
+    - splunk_forwarder_upgrade_service_active == "running"
+    - splunk_forwarder_upgrade_service_enabled == "enabled"
+
+- name: Determine whether upgrade or service repair is required
+  ansible.builtin.set_fact:
+    splunk_forwarder_upgrade_action_required: >-
+      {{
+        splunk_forwarder_upgrade_required | bool
+        or splunk_forwarder_upgrade_service_active != "running"
+        or splunk_forwarder_upgrade_service_enabled != "enabled"
+      }}
+
+- name: Read Splunk launch configuration
+  ansible.builtin.slurp:
+    src: "{{ splunk_forwarder_home }}/etc/splunk-launch.conf"
+  register: splunk_forwarder_launch_configuration
+  failed_when: false
+  when: splunk_forwarder_upgrade_action_required | bool
+
+- name: Check ownership of Splunk configuration directory
+  ansible.builtin.stat:
+    path: "{{ splunk_forwarder_home }}/etc"
+    get_checksum: false
+  register: splunk_forwarder_etc_status
+  when: splunk_forwarder_upgrade_action_required | bool
+
+- name: Determine Splunk operating-system user
+  ansible.builtin.set_fact:
+    splunk_forwarder_detected_user: >-
+      {{
+        (
+          (
+            splunk_forwarder_launch_configuration.content
+            | default("")
+            | b64decode
+            | regex_findall(
+                "(?m)^ *SPLUNK_OS_USER *= *([A-Za-z0-9_.-]+)"
+              )
+          )
+          + [
+              splunk_forwarder_etc_status.stat.pw_name
+              | default(splunk_forwarder_user)
+            ]
+        )
+        | first
+      }}
+  when: splunk_forwarder_upgrade_action_required | bool
+
+- name: Look up Splunk operating-system account
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ splunk_forwarder_detected_user }}"
+  when: splunk_forwarder_upgrade_action_required | bool
+
+- name: Record Splunk operating-system group
+  ansible.builtin.set_fact:
+    splunk_forwarder_detected_group: >-
+      {{
+        ansible_facts.getent_passwd[
+          splunk_forwarder_detected_user
+        ][2]
+      }}
+  when: splunk_forwarder_upgrade_action_required | bool
+
+- name: Report Splunk operating-system account
+  ansible.builtin.debug:
+    msg: >-
+      Splunk Universal Forwarder runs as
+      {{ splunk_forwarder_detected_user }}:
+      {{ splunk_forwarder_detected_group }}.
+  when: splunk_forwarder_upgrade_action_required | bool
+
+- name: Upgrade or repair Splunk Universal Forwarder
+  when: splunk_forwarder_upgrade_action_required | bool
+  block:
+    - name: Back up Splunk Forwarder configuration
+      community.general.archive:
+        path: "{{ splunk_forwarder_home }}/etc"
+        dest: >-
+          {{ splunk_forwarder_upgrade_backup_dir
+             }}/splunkforwarder-etc-{{
+             splunk_forwarder_installed_version }}.tar.gz
+        format: gz
+        owner: root
+        group: root
+        mode: "0600"
+      when:
+        - splunk_forwarder_upgrade_required | bool
+        - splunk_forwarder_upgrade_backup | bool
+
+    - name: Check whether SplunkForwarder systemd unit exists
+      ansible.builtin.stat:
+        path: "{{ splunk_forwarder_systemd_unit }}"
+        get_checksum: false
+      register: splunk_forwarder_upgrade_unit_status
+
+    - name: Stop systemd-managed Splunk Forwarder
+      ansible.builtin.systemd:
+        name: "{{ splunk_forwarder_service }}"
+        state: stopped
+      when: splunk_forwarder_upgrade_unit_status.stat.exists
+
+    - name: Stop unmanaged Splunk Forwarder process
+      ansible.builtin.include_tasks: ensure_stopped.yml
+      when: not splunk_forwarder_upgrade_unit_status.stat.exists
+
+    - name: Upgrade Splunk Universal Forwarder package
+      ansible.builtin.dnf:
+        name: "{{ splunk_forwarder_rpm }}"
+        state: present
+        disable_gpg_check: true
+      when: splunk_forwarder_upgrade_required | bool
+
+    - name: Restore Splunk installation ownership
+      ansible.builtin.file:
+        path: "{{ splunk_forwarder_home }}"
+        owner: "{{ splunk_forwarder_detected_user }}"
+        group: "{{ splunk_forwarder_detected_group }}"
+        mode: "0755"
+        state: directory
+
+    - name: Run Splunk migration and accept licence
+      ansible.builtin.command:
+        cmd: >-
+          {{ splunk_forwarder_home }}/bin/splunk
+          start
+          --accept-license
+          --answer-yes
+          --no-prompt
+      become: true
+      become_user: "{{ splunk_forwarder_detected_user }}"
+      timeout: "{{ splunk_forwarder_cli_timeout }}"
+      changed_when: true
+      when: splunk_forwarder_upgrade_required | bool
+
+    - name: Stop Splunk after migration
+      ansible.builtin.include_tasks: ensure_stopped.yml
+      when: splunk_forwarder_upgrade_required | bool
+
+    - name: Deploy managed SplunkForwarder systemd service
+      ansible.builtin.template:
+        src: SplunkForwarder.service.j2
+        dest: "{{ splunk_forwarder_systemd_unit }}"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload systemd
+
+    - name: Apply pending systemd service changes
+      ansible.builtin.meta: flush_handlers
+
+    - name: Enable and start SplunkForwarder
+      ansible.builtin.systemd:
+        name: "{{ splunk_forwarder_service }}"
+        enabled: true
+        state: started
+
+    - name: Gather resulting Splunk Forwarder service facts
+      ansible.builtin.service_facts:
+
+    - name: Validate resulting Splunk Forwarder service
+      ansible.builtin.assert:
+        that:
+          - >-
+            (
+              ansible_facts.services.get(
+                splunk_forwarder_service + ".service",
+                {}
+              )
+            ).get("state", "unknown") == "running"
+          - >-
+            (
+              ansible_facts.services.get(
+                splunk_forwarder_service + ".service",
+                {}
+              )
+            ).get("status", "unknown") == "enabled"
+        fail_msg: >-
+          {{ splunk_forwarder_service }} did not become running and
+          enabled after the upgrade or service repair.
+        success_msg: >-
+          {{ splunk_forwarder_service }} is running and enabled.
+
+    - name: Refresh installed package facts after upgrade
+      ansible.builtin.package_facts:
+        manager: rpm
+
+    - name: Record resulting Splunk Forwarder version
+      ansible.builtin.set_fact:
+        splunk_forwarder_upgrade_resulting_version: >-
+          {{
+            ansible_facts.packages["splunkforwarder"][0].version
+            if "splunkforwarder" in ansible_facts.packages
+            else ""
+          }}
+
+    - name: Validate resulting Splunk Forwarder version
+      ansible.builtin.assert:
+        that:
+          - splunk_forwarder_upgrade_resulting_version | length > 0
+          - >-
+            splunk_forwarder_upgrade_resulting_version
+            is version(splunk_forwarder_target_version, ">=")
+        fail_msg: >-
+          Splunk Universal Forwarder is version
+          {{ splunk_forwarder_upgrade_resulting_version
+             | default("unknown", true) }};
+          expected {{ splunk_forwarder_target_version }} or newer.
+        success_msg: >-
+          Splunk Universal Forwarder upgraded or repaired successfully.
+          Installed version:
+          {{ splunk_forwarder_upgrade_resulting_version }}.
+
+  rescue:
+    - name: Record Splunk Forwarder upgrade failure
+      ansible.builtin.set_fact:
+        splunk_forwarder_upgrade_failed: true
+        splunk_forwarder_upgrade_error: >-
+          {{
+            ansible_failed_task.name
+          }}:
+          {{
+            ansible_failed_result.stderr
+            | default(
+                ansible_failed_result.msg
+                | default("unknown error")
+              )
+          }}
+
+    - name: Restore managed SplunkForwarder systemd service
+      ansible.builtin.template:
+        src: SplunkForwarder.service.j2
+        dest: "{{ splunk_forwarder_systemd_unit }}"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload systemd
+      failed_when: false
+
+    - name: Apply recovered systemd service definition
+      ansible.builtin.meta: flush_handlers
+
+    - name: Attempt to restore SplunkForwarder service
+      ansible.builtin.systemd:
+        name: "{{ splunk_forwarder_service }}"
+        enabled: true
+        state: started
+      failed_when: false
+
+- name: Fail when Splunk Forwarder upgrade was unsuccessful
+  ansible.builtin.fail:
+    msg: >-
+      Splunk Universal Forwarder upgrade failed:
+      {{ splunk_forwarder_upgrade_error }}
+  when: splunk_forwarder_upgrade_failed | default(false)

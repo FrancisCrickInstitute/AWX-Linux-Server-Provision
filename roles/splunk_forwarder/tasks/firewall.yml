@@ -1,0 +1,20 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Configures the Splunk Universal Forwarder firewall ports when
+# firewalld is already running. This role does not start or enable firewalld.
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Configure Splunk Forwarder firewall ports
+  ansible.posix.firewalld:
+    zone: "{{ splunk_forwarder_firewall_zone }}"
+    port: "{{ item }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ splunk_forwarder_firewall_ports }}"
+  when:
+    - >-
+      ansible_facts.services["firewalld.service"].state
+      | default("") == "running"

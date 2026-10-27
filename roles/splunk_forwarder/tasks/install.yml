@@ -1,0 +1,59 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Installs or upgrades the Splunk Universal Forwarder package
+# and records the installed version for later validation.
+
+- name: Gather installed package facts
+  ansible.builtin.package_facts:
+    manager: rpm
+
+- name: Record installed Splunk Forwarder version
+  ansible.builtin.set_fact:
+    splunk_forwarder_installed_version: >-
+      {{
+        ansible_facts.packages["splunkforwarder"][0].version
+        if "splunkforwarder" in ansible_facts.packages
+        else ""
+      }}
+
+- name: Report Splunk Forwarder versions
+  ansible.builtin.debug:
+    msg: >-
+      Installed:
+      {{ splunk_forwarder_installed_version | default("not installed", true) }}
+      / Target: {{ splunk_forwarder_target_version }}
+
+- name: Install or upgrade Splunk Universal Forwarder
+  ansible.builtin.dnf:
+    name: "{{ splunk_forwarder_rpm }}"
+    state: present
+    disable_gpg_check: true
+  register: splunk_forwarder_install_result
+
+- name: Refresh installed package facts
+  ansible.builtin.package_facts:
+    manager: rpm
+
+- name: Record resulting Splunk Forwarder version
+  ansible.builtin.set_fact:
+    splunk_forwarder_installed_version: >-
+      {{
+        ansible_facts.packages["splunkforwarder"][0].version
+        if "splunkforwarder" in ansible_facts.packages
+        else ""
+      }}
+
+- name: Validate installed Splunk Forwarder version
+  ansible.builtin.assert:
+    that:
+      - splunk_forwarder_installed_version | length > 0
+      - >-
+        splunk_forwarder_installed_version
+        is version(splunk_forwarder_target_version, ">=")
+    fail_msg: >-
+      Splunk Universal Forwarder installation failed or the installed
+      version {{ splunk_forwarder_installed_version | default("unknown", true) }}
+      is older than the required version {{ splunk_forwarder_target_version }}.
+    success_msg: >-
+      Splunk Universal Forwarder
+      {{ splunk_forwarder_installed_version }} is installed.

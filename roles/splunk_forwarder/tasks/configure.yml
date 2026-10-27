@@ -1,0 +1,76 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Configures the Splunk Universal Forwarder service account,
+# logging permissions and Splunk configuration files.
+
+- name: Configure Splunk operating-system account
+  ansible.builtin.user:
+    name: "{{ splunk_forwarder_user }}"
+    password: "{{ splunk_forwarder_local_password }}"
+    state: present
+
+- name: Configure Splunk installation ownership
+  ansible.builtin.file:
+    path: "{{ splunk_forwarder_home }}"
+    owner: "{{ splunk_forwarder_user }}"
+    group: "{{ splunk_forwarder_group }}"
+    mode: "0755"
+    state: directory
+
+- name: Grant Splunk read access to existing system logs
+  ansible.posix.acl:
+    path: /var/log
+    entity: "{{ splunk_forwarder_user }}"
+    etype: user
+    permissions: r-X
+    recursive: true
+    state: present
+
+- name: Grant Splunk default read access to new system logs
+  ansible.posix.acl:
+    path: /var/log
+    entity: "{{ splunk_forwarder_user }}"
+    etype: user
+    permissions: r-X
+    default: true
+    state: present
+
+- name: Configure audit log group
+  ansible.builtin.lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^log_group\s*='
+    line: "log_group = {{ splunk_forwarder_group }}"
+    state: present
+  notify: Restart auditd
+
+- name: Ensure Splunk local configuration directory exists
+  ansible.builtin.file:
+    path: "{{ splunk_forwarder_home }}/etc/system/local"
+    state: directory
+    owner: "{{ splunk_forwarder_user }}"
+    group: "{{ splunk_forwarder_group }}"
+    mode: "0700"
+
+- name: Deploy Splunk Deployment Server configuration
+  ansible.builtin.template:
+    src: deploymentclient.conf.j2
+    dest: "{{ splunk_forwarder_home }}/etc/system/local/deploymentclient.conf"
+    owner: "{{ splunk_forwarder_user }}"
+    group: "{{ splunk_forwarder_group }}"
+    mode: "0600"
+  notify: Restart Splunk Forwarder
+
+- name: Check whether Splunk user seed file exists
+  ansible.builtin.stat:
+    path: "{{ splunk_forwarder_home }}/etc/system/local/user-seed.conf"
+  register: splunk_forwarder_user_seed
+
+- name: Deploy initial Splunk administrator credentials
+  ansible.builtin.template:
+    src: user-seed.conf.j2
+    dest: "{{ splunk_forwarder_home }}/etc/system/local/user-seed.conf"
+    owner: "{{ splunk_forwarder_user }}"
+    group: "{{ splunk_forwarder_group }}"
+    mode: "0600"
+  when: not splunk_forwarder_user_seed.stat.exists
+  no_log: true

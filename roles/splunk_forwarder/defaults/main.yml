@@ -1,0 +1,74 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines configurable defaults for Splunk Universal Forwarder
+# installation and configuration on managed Rocky Linux servers.
+
+# -----------------------------------------------------------------------------
+# Installation
+# -----------------------------------------------------------------------------
+
+splunk_forwarder_rpm: >-
+  https://pulp3.thecrick.org/pulp/content/pulp-rpm-splunk/Packages/s/splunkforwarder-10.6.0.5-86587d4e3b27.x86_64.rpm
+
+splunk_forwarder_target_version: >-
+  {{
+    (
+      splunk_forwarder_rpm
+      | basename
+      | regex_search('splunkforwarder-([0-9.]+)-', '\1')
+    )
+    | first
+  }}
+
+# -----------------------------------------------------------------------------
+# Splunk paths and service account
+# -----------------------------------------------------------------------------
+
+splunk_forwarder_home: /opt/splunkforwarder
+splunk_forwarder_user: splunk
+splunk_forwarder_group: splunk
+splunk_forwarder_service: SplunkForwarder
+
+# -----------------------------------------------------------------------------
+# Splunk application administrator
+# -----------------------------------------------------------------------------
+
+splunk_forwarder_admin_username: splunkadmin
+
+# -----------------------------------------------------------------------------
+# Deployment Server
+# -----------------------------------------------------------------------------
+
+splunk_forwarder_deployment_server: splunk-deploy.thecrick.org
+splunk_forwarder_deployment_server_port: 8089
+
+# -----------------------------------------------------------------------------
+# Firewall
+# -----------------------------------------------------------------------------
+
+splunk_forwarder_configure_firewall: true
+splunk_forwarder_firewall_zone: public
+
+splunk_forwarder_firewall_ports:
+  - 8089/tcp
+  - 9997/tcp
+
+# -----------------------------------------------------------------------------
+# Upgrade behaviour
+# -----------------------------------------------------------------------------
+
+splunk_forwarder_upgrade_backup: true
+splunk_forwarder_upgrade_backup_dir: /var/tmp
+
+splunk_forwarder_upgrade_service_timeout: 120
+splunk_forwarder_cli_timeout: 300
+splunk_forwarder_stop_grace: 300
+
+# -----------------------------------------------------------------------------
+# Systemd service
+# -----------------------------------------------------------------------------
+
+splunk_forwarder_systemd_unit: >-
+  /etc/systemd/system/{{ splunk_forwarder_service }}.service
+
+splunk_forwarder_service_restart_on_config_change: true

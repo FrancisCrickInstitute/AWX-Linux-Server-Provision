@@ -1,0 +1,53 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Safely stops an unmanaged Splunk Forwarder process during
+# controlled upgrade or recovery operations.
+#
+# Splunk is first sent SIGINT and given time to exit cleanly.
+# SIGKILL is used only if the process remains running after the grace period.
+
+- name: Stop unmanaged Splunk Forwarder process
+  ansible.builtin.shell: |
+    set -o pipefail
+
+    pidfile="{{ splunk_forwarder_home }}/var/run/splunk/splunkd.pid"
+
+    alive() {
+      [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
+    }
+
+    if ! alive; then
+      echo "splunkd not running"
+      exit 0
+    fi
+
+    echo "sending SIGINT to splunkd $pid"
+    kill -INT "$pid"
+
+    for i in $(seq 1 {{ (splunk_forwarder_stop_grace | int / 5) | int }}); do
+      if ! alive; then
+        echo "splunkd exited cleanly"
+        exit 0
+      fi
+
+      sleep 5
+    done
+
+    echo "splunkd $pid still running after grace period; sending SIGKILL"
+
+    pkill -KILL -P "$pid" 2>/dev/null || true
+    kill -KILL "$pid" 2>/dev/null || true
+
+    sleep 2
+
+    if alive; then
+      echo "splunkd $pid would not stop"
+      exit 1
+    fi
+
+    echo "splunkd stopped"
+  args:
+    executable: /bin/bash
+  register: splunk_forwarder_stop_result
+  changed_when:
+    - "'splunkd not running' not in splunk_forwarder_stop_result.stdout"

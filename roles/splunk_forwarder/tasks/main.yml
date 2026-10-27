@@ -1,0 +1,20 @@
+---
+# Created by Adam Spandel, October 2026
+# Purpose: Defines the execution order for Splunk Universal Forwarder
+# installation and configuration on managed Rocky Linux servers.
+
+- name: Validate Splunk Forwarder configuration
+  ansible.builtin.import_tasks: validate.yml
+
+- name: Configure Splunk firewall access
+  ansible.builtin.import_tasks: firewall.yml
+  when: splunk_forwarder_configure_firewall | bool
+
+- name: Install Splunk Universal Forwarder
+  ansible.builtin.import_tasks: install.yml
+
+- name: Configure Splunk Universal Forwarder
+  ansible.builtin.import_tasks: configure.yml
+
+- name: Configure Splunk Forwarder service
+  ansible.builtin.import_tasks: service.yml
