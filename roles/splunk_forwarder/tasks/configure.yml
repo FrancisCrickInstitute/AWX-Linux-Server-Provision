@@ -9,13 +9,23 @@
     password: "{{ splunk_forwarder_local_password }}"
     state: present
 
+- name: Configure Splunk operating-system runtime user
+  ansible.builtin.lineinfile:
+    path: "{{ splunk_forwarder_home }}/etc/splunk-launch.conf"
+    regexp: '^SPLUNK_OS_USER='
+    line: "SPLUNK_OS_USER={{ splunk_forwarder_user }}"
+    state: present
+    owner: "{{ splunk_forwarder_user }}"
+    group: "{{ splunk_forwarder_group }}"
+    mode: "0644"
+
 - name: Configure Splunk installation ownership
   ansible.builtin.file:
     path: "{{ splunk_forwarder_home }}"
     owner: "{{ splunk_forwarder_user }}"
     group: "{{ splunk_forwarder_group }}"
-    mode: "0755"
     state: directory
+    recurse: true
 
 - name: Grant Splunk read access to existing system logs
   ansible.posix.acl:

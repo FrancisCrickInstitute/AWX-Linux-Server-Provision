@@ -26,7 +26,6 @@
       --answer-yes
       --no-prompt
   become: true
-  become_user: "{{ splunk_forwarder_user }}"
   timeout: "{{ splunk_forwarder_cli_timeout }}"
   when: not splunk_forwarder_initialised.stat.exists
   changed_when: true
@@ -35,7 +34,6 @@
   ansible.builtin.command:
     cmd: "{{ splunk_forwarder_home }}/bin/splunk stop"
   become: true
-  become_user: "{{ splunk_forwarder_user }}"
   timeout: "{{ splunk_forwarder_cli_timeout }}"
   when: not splunk_forwarder_initialised.stat.exists
   changed_when: true
