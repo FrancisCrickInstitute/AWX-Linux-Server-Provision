@@ -27,6 +27,8 @@
             'not found' in provision_existing_vm_info.msg | lower
             or
             'unable to find' in provision_existing_vm_info.msg | lower
+            or
+            'non-existing vm' in provision_existing_vm_info.msg | lower
           )
         )
     fail_msg: >-
