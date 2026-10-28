@@ -39,11 +39,7 @@
 
 - name: Save updated local tags
   ansible.builtin.copy:
-    content: >-
-      {{
-        rocky_linux_updates_updated_tags
-        | to_nice_json
-      }}
+    content: "{{ rocky_linux_updates_updated_tags | to_nice_json }}\n"
     dest: "{{ rocky_linux_updates_local_tags_file }}"
     owner: root
     group: root
