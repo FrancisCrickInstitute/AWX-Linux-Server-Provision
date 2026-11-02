@@ -69,3 +69,18 @@
     group: "{{ splunk_forwarder_group }}"
     mode: "0600"
   notify: Restart Splunk Forwarder
+
+- name: Check whether Splunk has already been initialised
+  ansible.builtin.stat:
+    path: "{{ splunk_forwarder_home }}/etc/passwd"
+  register: splunk_forwarder_configuration_initialised
+
+- name: Deploy initial Splunk administrator credentials
+  ansible.builtin.template:
+    src: user-seed.conf.j2
+    dest: "{{ splunk_forwarder_home }}/etc/system/local/user-seed.conf"
+    owner: "{{ splunk_forwarder_user }}"
+    group: "{{ splunk_forwarder_group }}"
+    mode: "0600"
+  when: not splunk_forwarder_configuration_initialised.stat.exists
+  no_log: true
