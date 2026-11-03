@@ -33,7 +33,7 @@
       - >-
         ansible_facts["ansible_local"]["tags"][
           rocky_linux_updates_patching_fact_name
-        ] == ansible_facts["date_time"]["date"]
+        ] | length > 0
     fail_msg: >-
       Rocky Linux patching completed, but the lastPatching local
       fact could not be validated.
@@ -46,11 +46,35 @@
         ]
       }}.
 
+- name: Validate current patching timestamp
+  ansible.builtin.assert:
+    that:
+      - >-
+        ansible_facts["ansible_local"]["tags"][
+          rocky_linux_updates_patching_fact_name
+        ] == rocky_linux_updates_patching_timestamp
+    fail_msg: >-
+      Packages were updated, but the lastPatching timestamp does
+      not match the current patching run.
+    success_msg: >-
+      lastPatching timestamp matches the current patching run.
+  when:
+    - rocky_linux_updates_apply_updates | bool
+    - rocky_linux_updates_result is defined
+    - rocky_linux_updates_result.changed | default(false) | bool
+
 - name: Report Rocky Linux patching status
   ansible.builtin.debug:
     msg:
       - >-
         Rocky Linux patching completed successfully.
+      - >-
+        Packages changed:
+        {{
+          rocky_linux_updates_result.changed
+          | default(false)
+          | bool
+        }}.
       - >-
         Reboot required:
         {{ rocky_linux_updates_reboot_required | default(false) | bool }}.

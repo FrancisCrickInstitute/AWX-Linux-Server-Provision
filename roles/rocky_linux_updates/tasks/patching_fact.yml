@@ -1,7 +1,8 @@
 ---
 # Created by Adam Spandel, October 2026
-# Purpose: Records the date of successful Rocky Linux patching in
+# Purpose: Records the timestamp of successful Rocky Linux patching in
 # the existing Ansible local facts without overwriting other tags.
+# lastPatching is updated only when package updates are actually applied.
 
 - name: Ensure Ansible local facts directory exists
   ansible.builtin.file:
@@ -11,7 +12,7 @@
     group: root
     mode: "0755"
 
-- name: Refresh Ansible local facts before updating patching date
+- name: Refresh Ansible local facts before updating patching timestamp
   ansible.builtin.setup:
     filter:
       - ansible_local
@@ -24,6 +25,21 @@
         | default({})
       }}
 
+- name: Build current patching timestamp
+  ansible.builtin.set_fact:
+    rocky_linux_updates_patching_timestamp: >-
+      {{
+        ansible_facts["date_time"]["date"]
+        ~ " "
+        ~ ansible_facts["date_time"]["hour"]
+        ~ ":"
+        ~ ansible_facts["date_time"]["minute"]
+      }}
+  when:
+    - rocky_linux_updates_apply_updates | bool
+    - rocky_linux_updates_result is defined
+    - rocky_linux_updates_result.changed | default(false) | bool
+
 - name: Build updated local tags
   ansible.builtin.set_fact:
     rocky_linux_updates_updated_tags: >-
@@ -32,10 +48,14 @@
         | combine(
             {
               rocky_linux_updates_patching_fact_name:
-                ansible_facts["date_time"]["date"]
+                rocky_linux_updates_patching_timestamp
             }
           )
       }}
+  when:
+    - rocky_linux_updates_apply_updates | bool
+    - rocky_linux_updates_result is defined
+    - rocky_linux_updates_result.changed | default(false) | bool
 
 - name: Save updated local tags
   ansible.builtin.copy:
@@ -44,6 +64,10 @@
     owner: root
     group: root
     mode: "0644"
+  when:
+    - rocky_linux_updates_apply_updates | bool
+    - rocky_linux_updates_result is defined
+    - rocky_linux_updates_result.changed | default(false) | bool
 
 - name: Refresh Ansible local facts after patching
   ansible.builtin.setup:
@@ -53,12 +77,16 @@
 - name: Validate last patching fact
   ansible.builtin.assert:
     that:
+      - ansible_facts["ansible_local"]["tags"] is defined
       - >-
+        rocky_linux_updates_patching_fact_name
+        in ansible_facts["ansible_local"]["tags"]
+    fail_msg: >-
+      The lastPatching local fact could not be validated.
+    success_msg: >-
+      The lastPatching local fact is
+      {{
         ansible_facts["ansible_local"]["tags"][
           rocky_linux_updates_patching_fact_name
-        ] == ansible_facts["date_time"]["date"]
-    fail_msg: >-
-      The lastPatching local fact was not updated successfully.
-    success_msg: >-
-      The lastPatching local fact was updated successfully to
-      {{ ansible_facts["date_time"]["date"] }}.
+        ]
+      }}.
