@@ -35,6 +35,7 @@
     permissions: r-X
     recursive: true
     state: present
+  changed_when: false
 
 - name: Grant Splunk default read access to new system logs
   ansible.posix.acl:
