@@ -93,6 +93,8 @@
   loop_control:
     label: "{{ item.key }}"
   when:
+    - item.value.environment is defined
+    - item.value.infoblox_network is defined
     - item.value.environment == provision_auto_platform_environment
     - >-
       provision_auto_vm_ip.startswith(
