@@ -7,6 +7,33 @@
   ansible.builtin.set_fact:
     provision_auto_vm_name: "{{ provision_auto_resume_hostname | lower }}"
 
+- name: Set resume environment values
+  ansible.builtin.set_fact:
+    provision_auto_domain: >-
+      {{
+        provision_auto_environments[vm_environment].domain
+      }}
+    provision_auto_platform_environment: >-
+      {{
+        provision_auto_environments[vm_environment].platform_environment
+      }}
+    provision_auto_vcenter_host: >-
+      {{
+        provision_auto_vcenter[
+          provision_auto_environments[
+            vm_environment
+          ].platform_environment
+        ].vcenter_host
+      }}
+    provision_auto_vcenter_datacenter: >-
+      {{
+        provision_auto_vcenter[
+          provision_auto_environments[
+            vm_environment
+          ].platform_environment
+        ].datacenter
+      }}
+
 - name: Build resume VM FQDN
   ansible.builtin.set_fact:
     provision_auto_vm_fqdn: >-
