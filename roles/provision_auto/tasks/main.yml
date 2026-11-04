@@ -31,3 +31,8 @@
   ansible.builtin.import_tasks: prepare_vmware.yml
   when:
     - provision_auto_create_vm | bool
+
+- name: Provision automatic VMware VM
+  ansible.builtin.import_tasks: vmware.yml
+  when:
+    - provision_auto_create_vm | bool
