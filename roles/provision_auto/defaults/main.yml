@@ -34,3 +34,13 @@ provision_auto_infoblox_host: ddi-automation.thecrick.org
 # Infoblox IP allocation.
 provision_auto_infoblox_excluded_ip_start: 0
 provision_auto_infoblox_excluded_ip_end: 10
+
+
+# -----------------------------------------------------------------------------
+# Infrastructure change controls
+# -----------------------------------------------------------------------------
+
+# Remains false during discovery-only testing.
+# Must be explicitly enabled to create an Infoblox host record.
+
+provision_auto_create_infoblox_record: false
