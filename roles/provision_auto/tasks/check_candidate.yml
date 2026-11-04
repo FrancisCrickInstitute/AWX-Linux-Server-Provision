@@ -1,0 +1,38 @@
+---
+# Created by Adam Spandel, November 2026
+# Purpose: Checks one vCenter-available hostname candidate against
+# Infoblox and selects it when no existing host record is present.
+
+- name: Build Infoblox candidate FQDN
+  ansible.builtin.set_fact:
+    provision_auto_candidate_fqdn: >-
+      {{
+        provision_auto_candidate_name
+        ~ '.'
+        ~ provision_auto_domain
+      }}
+
+- name: Look up candidate hostname in Infoblox
+  ansible.builtin.set_fact:
+    provision_auto_candidate_host_record: >-
+      {{
+        lookup(
+          'infoblox.nios_modules.nios_lookup',
+          'record:host',
+          filter={
+            'name': provision_auto_candidate_fqdn
+          },
+          provider={
+            'host': provision_auto_infoblox_host,
+            'username': provision_infoblox_username,
+            'password': provision_infoblox_password
+          }
+        )
+      }}
+
+- name: Select candidate available in vCenter and Infoblox
+  ansible.builtin.set_fact:
+    provision_auto_vm_name: "{{ provision_auto_candidate_name }}"
+    provision_auto_vm_fqdn: "{{ provision_auto_candidate_fqdn }}"
+  when:
+    - provision_auto_candidate_host_record | length == 0

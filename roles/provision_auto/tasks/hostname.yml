@@ -1,7 +1,7 @@
 ---
 # Created by Adam Spandel, November 2026
-# Purpose: Derives the automatic Linux VM hostname prefix and performs
-# read-only discovery of matching virtual machines in vCenter.
+# Purpose: Derives the automatic Linux VM hostname prefix and selects
+# the first hostname available in both vCenter and Infoblox.
 
 - name: Set automatic provisioning environment values
   ansible.builtin.set_fact:
@@ -78,7 +78,6 @@
     validate_certs: "{{ provision_auto_vcenter_validate_certs }}"
     vm_type: vm
   register: provision_auto_vcenter_vm_info
-  no_log: false
 
 - name: Build list of existing vCenter VM names
   ansible.builtin.set_fact:
@@ -106,14 +105,18 @@
         | list
       }}
 
+- name: Initialise automatic hostname candidate list
+  ansible.builtin.set_fact:
+    provision_auto_hostname_candidates: []
+
 - name: Build automatic hostname candidates
   ansible.builtin.set_fact:
     provision_auto_hostname_candidates: >-
       {{
-        provision_auto_hostname_candidates | default([])
+        provision_auto_hostname_candidates
         + [
             provision_auto_hostname_prefix
-            ~ '%02d' | format(item)
+            ~ ('%02d' | format(item))
           ]
       }}
   loop: >-
@@ -138,25 +141,33 @@
     that:
       - provision_auto_available_vcenter_hostnames | length > 0
     fail_msg: >-
-      No available hostname exists between
+      No available vCenter hostname exists between
       {{ provision_auto_hostname_prefix }}01 and
       {{ provision_auto_hostname_prefix }}99.
 
-- name: Select first available vCenter hostname
-  ansible.builtin.set_fact:
-    provision_auto_vm_name: >-
-      {{
-        provision_auto_available_vcenter_hostnames | first
-      }}
+- name: Check vCenter-available candidates against Infoblox
+  ansible.builtin.include_tasks: check_candidate.yml
+  loop: "{{ provision_auto_available_vcenter_hostnames }}"
+  loop_control:
+    loop_var: provision_auto_candidate_name
+    label: "{{ provision_auto_candidate_name }}"
+  when: provision_auto_vm_name is not defined
 
-- name: Build candidate VM FQDN
-  ansible.builtin.set_fact:
-    provision_auto_vm_fqdn: >-
-      {{
-        provision_auto_vm_name
-        ~ '.'
-        ~ provision_auto_domain
-      }}
+- name: Validate hostname is available in vCenter and Infoblox
+  ansible.builtin.assert:
+    that:
+      - provision_auto_vm_name is defined
+      - provision_auto_vm_name | length > 0
+      - provision_auto_vm_fqdn is defined
+      - provision_auto_vm_fqdn | length > 0
+    fail_msg: >-
+      No hostname between
+      {{ provision_auto_hostname_prefix }}01 and
+      {{ provision_auto_hostname_prefix }}99
+      is available in both vCenter and Infoblox.
+    success_msg: >-
+      {{ provision_auto_vm_name }} is the first hostname available
+      in both vCenter and Infoblox.
 
 - name: Report automatic hostname discovery
   ansible.builtin.debug:
@@ -167,7 +178,7 @@
       - "Domain: {{ provision_auto_domain }}"
       - "vCenter: {{ provision_auto_vcenter_host }}"
       - >-
-        Matching existing VMs:
+        Matching existing vCenter VMs:
         {{
           provision_auto_matching_vm_names
           if provision_auto_matching_vm_names | length > 0
@@ -179,8 +190,6 @@
         through
         {{ '%02d' | format(provision_auto_hostname_end | int) }}
       - >-
-        First available vCenter hostname:
+        First hostname available in vCenter and Infoblox:
         {{ provision_auto_vm_name }}
-      - >-
-        Candidate FQDN:
-        {{ provision_auto_vm_fqdn }}
+      - "Selected FQDN: {{ provision_auto_vm_fqdn }}"
