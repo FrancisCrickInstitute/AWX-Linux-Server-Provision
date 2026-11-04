@@ -110,15 +110,19 @@
   ansible.builtin.set_fact:
     provision_auto_hostname_candidates: >-
       {{
-        query(
-          'sequence',
-          'start=' ~ (provision_auto_hostname_start | string),
-          'end=' ~ (provision_auto_hostname_end | string),
-          'format=%02d'
-        )
-        | map('regex_replace', '^', provision_auto_hostname_prefix)
-        | list
+        provision_auto_hostname_candidates | default([])
+        + [
+            provision_auto_hostname_prefix
+            ~ '%02d' | format(item)
+          ]
       }}
+  loop: >-
+    {{
+      range(
+        provision_auto_hostname_start | int,
+        (provision_auto_hostname_end | int) + 1
+      ) | list
+    }}
 
 - name: Determine available vCenter hostnames
   ansible.builtin.set_fact:
