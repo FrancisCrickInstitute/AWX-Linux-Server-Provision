@@ -36,3 +36,6 @@
   ansible.builtin.import_tasks: vmware.yml
   when:
     - provision_auto_create_vm | bool
+
+- name: Export automatic provisioning workflow variables
+  ansible.builtin.import_tasks: export.yml
