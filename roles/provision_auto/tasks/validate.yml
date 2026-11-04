@@ -1,0 +1,53 @@
+---
+# Created by Adam Spandel, November 2026
+# Purpose: Validates the survey inputs required to automatically
+# generate a Linux VM hostname.
+
+- name: Validate automatic provisioning survey variables
+  ansible.builtin.assert:
+    that:
+      - vm_environment is defined
+      - vm_environment | length > 0
+      - vm_function is defined
+      - vm_function | length > 0
+    fail_msg: >-
+      Automatic provisioning requires both vm_environment
+      and vm_function.
+
+- name: Validate requested environment
+  ansible.builtin.assert:
+    that:
+      - vm_environment in provision_auto_environments
+    fail_msg: >-
+      Unsupported environment '{{ vm_environment }}'.
+      Supported environments are:
+      {{ provision_auto_environments.keys() | list | join(', ') }}.
+
+- name: Validate requested server function
+  ansible.builtin.assert:
+    that:
+      - vm_function in provision_auto_functions
+    fail_msg: >-
+      Unsupported server function '{{ vm_function }}'.
+      Supported functions are:
+      {{ provision_auto_functions.keys() | list | join(', ') }}.
+
+- name: Validate hostname sequence range
+  ansible.builtin.assert:
+    that:
+      - provision_auto_hostname_start | int >= 1
+      - provision_auto_hostname_end | int <= 99
+      - provision_auto_hostname_start | int
+        <= provision_auto_hostname_end | int
+    fail_msg: >-
+      Automatic hostname sequence must be between 01 and 99.
+
+- name: Validate automatic provisioning vCenter mapping
+  ansible.builtin.assert:
+    that:
+      - >-
+        provision_auto_environments[vm_environment].platform_environment
+        in provision_auto_vcenter
+    fail_msg: >-
+      No vCenter mapping exists for environment
+      '{{ vm_environment }}'.

@@ -1,0 +1,14 @@
+---
+# Created by Adam Spandel, November 2026
+# Purpose: Develops and validates automatic Rocky Linux VM
+# hostname discovery without making infrastructure changes.
+
+- name: Discover automatic Linux VM hostname
+  hosts: localhost
+  gather_facts: false
+
+  vars_files:
+    - ../roles/provision/vars/main.yml
+
+  roles:
+    - role: provision_auto

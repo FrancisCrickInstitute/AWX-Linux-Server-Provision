@@ -1,0 +1,31 @@
+---
+# Created by Adam Spandel, November 2026
+# Purpose: Defines configurable defaults used by the automatic Linux
+# VM provisioning role.
+
+# -----------------------------------------------------------------------------
+# Automatic hostname allocation
+# -----------------------------------------------------------------------------
+
+# Hostname sequence range.
+# The role selects the first available number, not the highest number + 1.
+
+provision_auto_hostname_start: 1
+provision_auto_hostname_end: 99
+
+# Linux/Unix operating-system identifier used in Crick hostnames.
+
+provision_auto_os_code: u
+
+# -----------------------------------------------------------------------------
+# vCenter
+# -----------------------------------------------------------------------------
+
+provision_auto_vcenter_user: svc-ansible-usr@vsphere.local
+provision_auto_vcenter_validate_certs: false
+
+# -----------------------------------------------------------------------------
+# Infoblox
+# -----------------------------------------------------------------------------
+
+provision_auto_infoblox_host: ddi-automation.thecrick.org
