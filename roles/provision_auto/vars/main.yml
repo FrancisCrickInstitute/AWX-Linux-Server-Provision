@@ -37,19 +37,6 @@ provision_auto_functions:
   Application: ap
 
 # -----------------------------------------------------------------------------
-# vCenter mappings
-# -----------------------------------------------------------------------------
-
-provision_auto_vcenter:
-  Staging:
-    vcenter_host: clvd1-vc-w-p-02.thecrick.org
-    datacenter: NetApp-HCI-Datacenter-01
-
-  Production:
-    vcenter_host: clvd1-vc-w-p-02.thecrick.org
-    datacenter: NetApp-HCI-Datacenter-01
-
-# -----------------------------------------------------------------------------
 # Approved automatic provisioning networks
 # -----------------------------------------------------------------------------
 #
@@ -104,3 +91,26 @@ provision_auto_networks:
 
   PRD_390:
     vlan: PRD_390
+
+provision_auto_vcenter:
+  Staging:
+    cluster: "Dev-Cluster-01"
+    datastore: "Pure-Dev-DSC"
+    folder: "/NetApp-HCI-Dev/HCI_VMs/Servers/Linux_Dev"
+    vcenter_host: "clvd1-vc-w-p-02.thecrick.org"
+    datacenter: "NetApp-HCI-Datacenter-01"
+    vm_template_folder: >-
+      /NetApp-HCI-Datacenter-01/vm/NetApp-HCI-Prod/HCI_Templates
+
+  Production:
+    cluster: "Prod-Cluster-01"
+    datastore: "Pure-Prod-DSC"
+    folder: "/NetApp-HCI-Prod/HCI_VMs/HCI_Servers/HCI_Linux"
+    vcenter_host: "clvd1-vc-w-p-02.thecrick.org"
+    datacenter: "NetApp-HCI-Datacenter-01"
+    vm_template_folder: >-
+      /NetApp-HCI-Datacenter-01/vm/NetApp-HCI-Prod/HCI_Templates
+
+provision_auto_templates:
+  "Rocky 10":
+    name: "template-rocky-10"

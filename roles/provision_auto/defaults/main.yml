@@ -44,3 +44,31 @@ provision_auto_infoblox_excluded_ip_end: 10
 # Must be explicitly enabled to create an Infoblox host record.
 
 provision_auto_create_infoblox_record: false
+
+# -----------------------------------------------------------------------------
+# VMware provisioning
+# -----------------------------------------------------------------------------
+
+provision_auto_create_vm: false
+
+provision_auto_vm_state: poweredon
+provision_auto_vm_wait_for_ip_address: true
+
+provision_auto_operating_system: "Rocky 10"
+
+provision_auto_vm_default_num_cpus: 1
+provision_auto_vm_default_memory_gb: 2
+provision_auto_vm_default_disk_size_gb: 20
+provision_auto_vm_default_disk_type: thick
+
+provision_auto_wait_port: 22
+provision_auto_wait_timeout: 300
+
+# -----------------------------------------------------------------------------
+# Resume / recovery
+# -----------------------------------------------------------------------------
+
+# Optional hostname of an existing Infoblox reservation that has not yet
+# been provisioned in VMware. Leave empty for normal automatic discovery.
+
+provision_auto_resume_hostname: ""

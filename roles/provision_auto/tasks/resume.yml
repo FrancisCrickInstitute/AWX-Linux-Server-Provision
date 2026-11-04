@@ -1,0 +1,129 @@
+---
+# Created by Adam Spandel, November 2026
+# Purpose: Resumes automatic provisioning from an existing Infoblox
+# reservation when VMware provisioning has not yet completed.
+
+- name: Set resume VM name
+  ansible.builtin.set_fact:
+    provision_auto_vm_name: "{{ provision_auto_resume_hostname | lower }}"
+
+- name: Build resume VM FQDN
+  ansible.builtin.set_fact:
+    provision_auto_vm_fqdn: >-
+      {{
+        provision_auto_vm_name
+        ~ '.'
+        ~ provision_auto_domain
+      }}
+
+- name: Look up resume hostname in Infoblox
+  ansible.builtin.set_fact:
+    provision_auto_resume_host_record: >-
+      {{
+        lookup(
+          'infoblox.nios_modules.nios_lookup',
+          'record:host',
+          filter={
+            'name': provision_auto_vm_fqdn
+          },
+          provider={
+            'host': provision_auto_infoblox_host,
+            'username': provision_infoblox_username,
+            'password': provision_infoblox_password
+          }
+        )
+      }}
+
+- name: Validate existing Infoblox reservation
+  ansible.builtin.assert:
+    that:
+      - provision_auto_resume_host_record is mapping
+      - provision_auto_resume_host_record.ipv4addrs is defined
+      - provision_auto_resume_host_record.ipv4addrs | length > 0
+    fail_msg: >-
+      Resume requested for {{ provision_auto_vm_fqdn }}, but no valid
+      Infoblox host reservation could be found.
+
+- name: Recover reserved IP address
+  ansible.builtin.set_fact:
+    provision_auto_vm_ip: >-
+      {{
+        provision_auto_resume_host_record.ipv4addrs[0].ipv4addr
+      }}
+
+- name: Initialise resume network match
+  ansible.builtin.set_fact:
+    provision_auto_resume_network_matches: []
+
+- name: Match reserved IP to approved network
+  ansible.builtin.set_fact:
+    provision_auto_resume_network_matches: >-
+      {{
+        provision_auto_resume_network_matches
+        + [item]
+      }}
+  loop: "{{ provision_auto_networks | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - item.value.environment == provision_auto_platform_environment
+    - >-
+      provision_auto_vm_ip.startswith(
+        item.value.infoblox_network
+        | regex_replace('\.0/24$', '.')
+      )
+
+- name: Validate reserved IP network
+  ansible.builtin.assert:
+    that:
+      - provision_auto_resume_network_matches | length == 1
+    fail_msg: >-
+      Reserved address {{ provision_auto_vm_ip }} for
+      {{ provision_auto_vm_fqdn }} could not be mapped uniquely to an
+      approved {{ provision_auto_platform_environment }} network.
+
+- name: Restore network configuration from reservation
+  ansible.builtin.set_fact:
+    provision_auto_vm_network_name: >-
+      {{ provision_auto_resume_network_matches[0].key }}
+    provision_auto_vm_vlan: >-
+      {{ provision_auto_resume_network_matches[0].value.vlan }}
+    provision_auto_vm_network: >-
+      {{ provision_auto_resume_network_matches[0].value.infoblox_network }}
+    provision_auto_vm_gateway: >-
+      {{ provision_auto_resume_network_matches[0].value.gateway }}
+    provision_auto_vm_netmask: >-
+      {{ provision_auto_resume_network_matches[0].value.netmask }}
+
+- name: Check resume VM does not already exist in vCenter
+  community.vmware.vmware_guest_info:
+    hostname: "{{ provision_auto_vcenter_host }}"
+    username: "{{ provision_auto_vcenter_user }}"
+    password: "{{ provision_vcenter_pass }}"
+    validate_certs: "{{ provision_auto_vcenter_validate_certs }}"
+    datacenter: "{{ provision_auto_vcenter_datacenter }}"
+    name: "{{ provision_auto_vm_name }}"
+  register: provision_auto_resume_vm_info
+  failed_when: false
+
+- name: Validate resume VM is absent from vCenter
+  ansible.builtin.assert:
+    that:
+      - provision_auto_resume_vm_info.instance is not defined
+    fail_msg: >-
+      Resume requested for {{ provision_auto_vm_name }}, but the VM
+      already exists in vCenter. No VMware creation should be attempted.
+    success_msg: >-
+      Resume reservation for {{ provision_auto_vm_name }} is valid
+      and no corresponding VM currently exists in vCenter.
+
+- name: Report resumed provisioning state
+  ansible.builtin.debug:
+    msg:
+      - "Hostname: {{ provision_auto_vm_name }}"
+      - "FQDN: {{ provision_auto_vm_fqdn }}"
+      - "Reserved IP: {{ provision_auto_vm_ip }}"
+      - "Network: {{ provision_auto_vm_network_name }}"
+      - "VLAN: {{ provision_auto_vm_vlan }}"
+      - "Subnet: {{ provision_auto_vm_network }}"
+      - "Gateway: {{ provision_auto_vm_gateway }}"
