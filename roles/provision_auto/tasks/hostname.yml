@@ -129,7 +129,7 @@
     provision_auto_available_vcenter_hostnames: >-
       {{
         provision_auto_hostname_candidates
-        | difference(provision_auto_matching_vm_names)
+        | reject('in', provision_auto_matching_vm_names)
         | list
       }}
 
