@@ -29,3 +29,8 @@ provision_auto_vcenter_validate_certs: false
 # -----------------------------------------------------------------------------
 
 provision_auto_infoblox_host: ddi-automation.thecrick.org
+
+# Reserve the first eleven addresses, .0 through .10, from automatic
+# Infoblox IP allocation.
+provision_auto_infoblox_excluded_ip_start: 0
+provision_auto_infoblox_excluded_ip_end: 10

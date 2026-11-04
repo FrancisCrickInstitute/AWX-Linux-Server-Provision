@@ -1,7 +1,7 @@
 ---
 # Created by Adam Spandel, November 2026
-# Purpose: Defines environment, server-function and vCenter mappings
-# used by the automatic Linux VM provisioning role.
+# Purpose: Defines environment, server-function, vCenter and approved
+# network mappings used by the automatic Linux VM provisioning role.
 
 # -----------------------------------------------------------------------------
 # Environment mappings
@@ -48,3 +48,59 @@ provision_auto_vcenter:
   Production:
     vcenter_host: clvd1-vc-w-p-02.thecrick.org
     datacenter: NetApp-HCI-Datacenter-01
+
+# -----------------------------------------------------------------------------
+# Approved automatic provisioning networks
+# -----------------------------------------------------------------------------
+#
+# These VLAN/subnet mappings have been verified against existing VMs
+# in vCenter.
+#
+# Automatic provisioning must only use networks belonging to the
+# requested platform environment.
+#
+# The VMware VLAN and Infoblox subnet are defined together so that
+# the allocated IP address can never be assigned to the wrong VLAN.
+#
+# Test and Development both use the Staging network pool.
+# Production uses the Production network pool.
+# -----------------------------------------------------------------------------
+
+provision_auto_networks:
+  DEV_960:
+    vlan: DEV_960
+    infoblox_network: 10.152.22.0/24
+    gateway: 10.152.22.1
+    netmask: 255.255.255.0
+    environment: Staging
+
+  DEV_961:
+    vlan: DEV_961
+    infoblox_network: 10.152.23.0/24
+    gateway: 10.152.23.1
+    netmask: 255.255.255.0
+    environment: Staging
+
+  DEV_962:
+    vlan: DEV_962
+    infoblox_network: 10.152.24.0/24
+    gateway: 10.152.24.1
+    netmask: 255.255.255.0
+    environment: Staging
+
+  DEV_965:
+    vlan: DEV_965
+    infoblox_network: 10.152.27.0/24
+    gateway: 10.152.27.1
+    netmask: 255.255.255.0
+    environment: Staging
+
+  PRD_611:
+    vlan: PRD_611
+    infoblox_network: 10.27.241.0/24
+    gateway: 10.27.241.1
+    netmask: 255.255.255.0
+    environment: Production
+
+  PRD_390:
+    vlan: PRD_390

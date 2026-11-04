@@ -1,10 +1,13 @@
 ---
 # Created by Adam Spandel, November 2026
 # Purpose: Defines the execution order for automatic Linux VM
-# hostname discovery.
+# hostname and network discovery.
 
 - name: Validate automatic provisioning inputs
   ansible.builtin.import_tasks: validate.yml
 
 - name: Determine first available Linux VM hostname
   ansible.builtin.import_tasks: hostname.yml
+
+- name: Determine automatic Linux VM network and IP
+  ansible.builtin.import_tasks: network.yml

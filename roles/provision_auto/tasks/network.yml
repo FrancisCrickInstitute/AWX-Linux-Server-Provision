@@ -1,0 +1,65 @@
+---
+# Created by Adam Spandel, November 2026
+# Purpose: Selects the first approved network for the requested
+# environment from which Infoblox can provide an available IP address.
+
+- name: Build approved network pool for requested environment
+  ansible.builtin.set_fact:
+    provision_auto_environment_networks: >-
+      {{
+        provision_auto_networks
+        | dict2items
+        | selectattr(
+            'value.environment',
+            'equalto',
+            provision_auto_platform_environment
+          )
+        | list
+      }}
+
+- name: Validate approved network pool
+  ansible.builtin.assert:
+    that:
+      - provision_auto_environment_networks | length > 0
+    fail_msg: >-
+      No approved automatic provisioning networks are configured for
+      {{ provision_auto_platform_environment }}.
+
+- name: Check approved networks for available IP address
+  ansible.builtin.include_tasks: check_network.yml
+  loop: "{{ provision_auto_environment_networks }}"
+  loop_control:
+    loop_var: provision_auto_network_item
+    label: >-
+      {{
+        provision_auto_network_item.key
+        ~ ' / '
+        ~ provision_auto_network_item.value.infoblox_network
+      }}
+  when: provision_auto_vm_ip is not defined
+
+- name: Validate automatic network and IP selection
+  ansible.builtin.assert:
+    that:
+      - provision_auto_vm_ip is defined
+      - provision_auto_vm_ip | length > 0
+      - provision_auto_vm_vlan is defined
+      - provision_auto_vm_network is defined
+      - provision_auto_vm_gateway is defined
+      - provision_auto_vm_netmask is defined
+    fail_msg: >-
+      Infoblox could not provide an available IP address from any
+      approved {{ provision_auto_platform_environment }} network.
+    success_msg: >-
+      Selected {{ provision_auto_vm_vlan }} with address
+      {{ provision_auto_vm_ip }}.
+
+- name: Report automatic network discovery
+  ansible.builtin.debug:
+    msg:
+      - "Network: {{ provision_auto_vm_network_name }}"
+      - "VLAN: {{ provision_auto_vm_vlan }}"
+      - "Subnet: {{ provision_auto_vm_network }}"
+      - "Proposed IP: {{ provision_auto_vm_ip }}"
+      - "Gateway: {{ provision_auto_vm_gateway }}"
+      - "Netmask: {{ provision_auto_vm_netmask }}"
