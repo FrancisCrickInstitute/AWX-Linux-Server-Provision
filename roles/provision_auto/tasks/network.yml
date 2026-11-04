@@ -3,19 +3,23 @@
 # Purpose: Selects the first approved network for the requested
 # environment from which Infoblox can provide an available IP address.
 
+- name: Initialise approved network pool
+  ansible.builtin.set_fact:
+    provision_auto_environment_networks: []
+
 - name: Build approved network pool for requested environment
   ansible.builtin.set_fact:
     provision_auto_environment_networks: >-
       {{
-        provision_auto_networks
-        | dict2items
-        | selectattr(
-            'value.environment',
-            'equalto',
-            provision_auto_platform_environment
-          )
-        | list
+        provision_auto_environment_networks
+        + [item]
       }}
+  loop: "{{ provision_auto_networks | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - item.value.environment is defined
+    - item.value.environment == provision_auto_platform_environment
 
 - name: Validate approved network pool
   ansible.builtin.assert:
