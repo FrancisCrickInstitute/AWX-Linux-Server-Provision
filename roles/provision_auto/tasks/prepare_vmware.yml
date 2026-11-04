@@ -1,0 +1,94 @@
+---
+# Created by Adam Spandel, November 2026
+# Purpose: Prepares VMware placement, template, hardware and guest
+# customization values for automatic Rocky Linux provisioning.
+
+- name: Set automatic VMware placement
+  ansible.builtin.set_fact:
+    provision_auto_vcenter_cluster: >-
+      {{
+        provision_auto_vcenter[
+          provision_auto_platform_environment
+        ].cluster
+      }}
+    provision_auto_vcenter_datastore: >-
+      {{
+        provision_auto_vcenter[
+          provision_auto_platform_environment
+        ].datastore
+      }}
+    provision_auto_vcenter_folder: >-
+      {{
+        provision_auto_vcenter[
+          provision_auto_platform_environment
+        ].folder
+      }}
+    provision_auto_vm_template_folder: >-
+      {{
+        provision_auto_vcenter[
+          provision_auto_platform_environment
+        ].vm_template_folder
+      }}
+
+- name: Validate automatic VMware template
+  ansible.builtin.assert:
+    that:
+      - provision_auto_operating_system in provision_auto_templates
+    fail_msg: >-
+      No VMware template is configured for
+      {{ provision_auto_operating_system }}.
+
+- name: Set automatic VMware template
+  ansible.builtin.set_fact:
+    provision_auto_vm_template: >-
+      {{
+        provision_auto_vm_template_folder
+        ~ '/'
+        ~ provision_auto_templates[
+          provision_auto_operating_system
+        ].name
+      }}
+
+- name: Set automatic VM hardware specification
+  ansible.builtin.set_fact:
+    provision_auto_vm_disks:
+      - size_gb: >-
+          {{
+            vm_disk_size_gb
+            | default(provision_auto_vm_default_disk_size_gb)
+            | int
+          }}
+        type: >-
+          {{
+            vm_disk_type
+            | default(provision_auto_vm_default_disk_type)
+          }}
+    provision_auto_vm_hardware:
+      num_cpus: >-
+        {{
+          vm_num_cpus
+          | default(provision_auto_vm_default_num_cpus)
+          | int
+        }}
+      memory_mb: >-
+        {{
+          (
+            vm_memory_gb
+            | default(provision_auto_vm_default_memory_gb)
+            | int
+          ) * 1024
+        }}
+
+- name: Set automatic VM DNS servers
+  ansible.builtin.set_fact:
+    provision_auto_vm_dns_servers:
+      - "10.24.96.30"
+      - "10.24.97.30"
+
+- name: Set automatic VM annotation
+  ansible.builtin.set_fact:
+    provision_auto_vm_annotation: |-
+      Automatically provisioned Rocky Linux 10 server
+      Hostname: {{ provision_auto_vm_name }}
+      IP: {{ provision_auto_vm_ip }}
+      Network: {{ provision_auto_vm_vlan }}

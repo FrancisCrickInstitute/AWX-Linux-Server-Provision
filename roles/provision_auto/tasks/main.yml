@@ -26,3 +26,8 @@
   ansible.builtin.import_tasks: reserve_infoblox.yml
   when:
     - provision_auto_resume_hostname | default('') | length == 0
+
+- name: Prepare automatic VMware provisioning
+  ansible.builtin.import_tasks: prepare_vmware.yml
+  when:
+    - provision_auto_create_vm | bool
