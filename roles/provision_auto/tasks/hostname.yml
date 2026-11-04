@@ -106,6 +106,54 @@
         | list
       }}
 
+- name: Build automatic hostname candidates
+  ansible.builtin.set_fact:
+    provision_auto_hostname_candidates: >-
+      {{
+        query(
+          'sequence',
+          'start=' ~ (provision_auto_hostname_start | string),
+          'end=' ~ (provision_auto_hostname_end | string),
+          'format=%02d'
+        )
+        | map('regex_replace', '^', provision_auto_hostname_prefix)
+        | list
+      }}
+
+- name: Determine available vCenter hostnames
+  ansible.builtin.set_fact:
+    provision_auto_available_vcenter_hostnames: >-
+      {{
+        provision_auto_hostname_candidates
+        | difference(provision_auto_matching_vm_names)
+        | list
+      }}
+
+- name: Validate available vCenter hostname exists
+  ansible.builtin.assert:
+    that:
+      - provision_auto_available_vcenter_hostnames | length > 0
+    fail_msg: >-
+      No available hostname exists between
+      {{ provision_auto_hostname_prefix }}01 and
+      {{ provision_auto_hostname_prefix }}99.
+
+- name: Select first available vCenter hostname
+  ansible.builtin.set_fact:
+    provision_auto_vm_name: >-
+      {{
+        provision_auto_available_vcenter_hostnames | first
+      }}
+
+- name: Build candidate VM FQDN
+  ansible.builtin.set_fact:
+    provision_auto_vm_fqdn: >-
+      {{
+        provision_auto_vm_name
+        ~ '.'
+        ~ provision_auto_domain
+      }}
+
 - name: Report automatic hostname discovery
   ansible.builtin.debug:
     msg:
@@ -126,3 +174,9 @@
         {{ '%02d' | format(provision_auto_hostname_start | int) }}
         through
         {{ '%02d' | format(provision_auto_hostname_end | int) }}
+      - >-
+        First available vCenter hostname:
+        {{ provision_auto_vm_name }}
+      - >-
+        Candidate FQDN:
+        {{ provision_auto_vm_fqdn }}
