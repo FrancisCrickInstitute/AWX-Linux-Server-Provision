@@ -36,3 +36,4 @@
     provision_auto_vm_fqdn: "{{ provision_auto_candidate_fqdn }}"
   when:
     - provision_auto_candidate_host_record | length == 0
+    - provision_auto_vm_name is not defined
