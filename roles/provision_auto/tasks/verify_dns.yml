@@ -1,0 +1,37 @@
+---
+# Created by Adam Spandel, November 2026
+# Purpose: Verifies that the automatically provisioned VM FQDN
+# resolves to the expected Infoblox-allocated IP address.
+
+- name: Resolve automatic VM FQDN
+  ansible.builtin.command:
+    cmd: "getent ahostsv4 {{ provision_auto_vm_fqdn }}"
+  register: provision_auto_dns_lookup
+  changed_when: false
+  failed_when: false
+  retries: 12
+  delay: 5
+  until:
+    - provision_auto_dns_lookup.rc == 0
+    - provision_auto_vm_ip in provision_auto_dns_lookup.stdout
+
+- name: Validate automatic VM forward DNS
+  ansible.builtin.assert:
+    that:
+      - provision_auto_dns_lookup.rc == 0
+      - provision_auto_vm_ip in provision_auto_dns_lookup.stdout
+    fail_msg: >-
+      Forward DNS verification failed for
+      {{ provision_auto_vm_fqdn }}.
+      Expected address {{ provision_auto_vm_ip }}.
+    success_msg: >-
+      Forward DNS verification succeeded for
+      {{ provision_auto_vm_fqdn }} ->
+      {{ provision_auto_vm_ip }}.
+
+- name: Report automatic VM DNS verification
+  ansible.builtin.debug:
+    msg:
+      - "FQDN: {{ provision_auto_vm_fqdn }}"
+      - "Expected IP: {{ provision_auto_vm_ip }}"
+      - "Forward DNS: verified"

@@ -42,6 +42,11 @@
   when:
     - provision_auto_create_vm | bool
 
+- name: Verify automatic VM forward DNS
+  ansible.builtin.import_tasks: verify_dns.yml
+  when:
+    - provision_auto_create_vm | bool
+
 - name: Send automatic provisioning notification
   ansible.builtin.import_tasks: notify.yml
   when:
