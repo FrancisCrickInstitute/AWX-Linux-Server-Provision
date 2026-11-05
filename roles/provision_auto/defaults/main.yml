@@ -72,3 +72,11 @@ provision_auto_wait_timeout: 300
 # been provisioned in VMware. Leave empty for normal automatic discovery.
 
 provision_auto_resume_hostname: ""
+
+# -----------------------------------------------------------------------------
+# Notifications
+# -----------------------------------------------------------------------------
+
+provision_auto_notification_enabled: true
+provision_auto_notification_username: "Ansible AWX"
+provision_auto_notification_validate_certs: false
