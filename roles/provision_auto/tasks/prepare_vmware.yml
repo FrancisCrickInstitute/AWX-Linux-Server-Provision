@@ -88,7 +88,15 @@
 - name: Set automatic VM annotation
   ansible.builtin.set_fact:
     provision_auto_vm_annotation: |-
-      Automatically provisioned Rocky Linux 10 server
+      SN: {{ servicenow_ticket }}
+      OS: {{ provision_auto_operating_system }}
+      BSN: {{ bsn }}
+      Desc: {{ vm_description }}
+      Owner: {{ owner }}
+      Provisioned by: {{ tower_user_name | default('ansible') }}
       Hostname: {{ provision_auto_vm_name }}
       IP: {{ provision_auto_vm_ip }}
       Network: {{ provision_auto_vm_vlan }}
+      CPU: {{ provision_auto_vm_hardware.num_cpus }}
+      Memory: {{ provision_auto_vm_hardware.memory_mb }} MB
+      OS Disk: {{ provision_auto_vm_disks[0].size_gb }} GB

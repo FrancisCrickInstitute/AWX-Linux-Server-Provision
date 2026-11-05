@@ -10,7 +10,11 @@
     ipv4:
       - address: "{{ provision_auto_vm_ip }}"
     comment: >-
-      Automatically reserved by AWX Linux server provisioning
+      SN: {{ servicenow_ticket }} |
+      BSN: {{ bsn }} |
+      Desc: {{ vm_description }} |
+      Owner: {{ owner }} |
+      Provisioned by: {{ tower_user_name | default('ansible') }}
     provider:
       host: "{{ provision_auto_infoblox_host }}"
       username: "{{ provision_infoblox_username }}"
