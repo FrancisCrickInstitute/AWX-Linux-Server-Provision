@@ -78,6 +78,11 @@
     validate_certs: "{{ provision_auto_vcenter_validate_certs }}"
     vm_type: vm
   register: provision_auto_vcenter_vm_info
+  retries: 3
+  delay: 10
+  until:
+    - provision_auto_vcenter_vm_info is succeeded
+    - provision_auto_vcenter_vm_info.virtual_machines is defined
 
 - name: Build list of existing vCenter VM names
   ansible.builtin.set_fact:
