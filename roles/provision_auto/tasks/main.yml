@@ -36,6 +36,11 @@
   ansible.builtin.import_tasks: vmware.yml
   when:
     - provision_auto_create_vm | bool
+    - not (
+        provision_auto_vm_already_exists
+        | default(false)
+        | bool
+      )
 
 - name: Verify automatic VMware VM
   ansible.builtin.import_tasks: verify_vmware.yml
@@ -52,6 +57,11 @@
   when:
     - provision_auto_create_vm | bool
     - provision_auto_notification_enabled | bool
+    - not (
+        provision_auto_vm_already_exists
+        | default(false)
+        | bool
+      )
 
 - name: Export automatic provisioning workflow variables
   ansible.builtin.import_tasks: export.yml
