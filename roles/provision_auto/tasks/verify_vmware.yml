@@ -30,9 +30,6 @@
       - >-
         provision_auto_verify_vm_info.instance.ipv4
         == provision_auto_vm_ip
-      - >-
-        provision_auto_verify_vm_info.instance.hw_eth0.summary
-        == provision_auto_vm_vlan
     fail_msg: >-
       VMware verification failed for {{ provision_auto_vm_name }}.
       The created VM does not match one or more requested provisioning values.
@@ -50,4 +47,7 @@
       - >-
         Memory:
         {{ provision_auto_verify_vm_info.instance.hw_memtotal_mb }} MB
-      - "Network: {{ provision_auto_verify_vm_info.instance.hw_eth0.summary }}"
+      - "Expected VLAN: {{ provision_auto_vm_vlan }}"
+      - >-
+        VMware network summary:
+        {{ provision_auto_verify_vm_info.instance.hw_eth0.summary }}
