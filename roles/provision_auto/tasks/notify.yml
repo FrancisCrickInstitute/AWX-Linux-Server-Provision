@@ -18,7 +18,7 @@
       BSN: {{ bsn }}
       Description: {{ vm_description }}
       Owner: {{ owner }}
-      Created: {{ ansible_date_time.date }}
+      Created: {{ now(utc=true, fmt='%Y-%m-%d') }}
       Provisioned by: {{ tower_user_name | default('ansible') }}
 
       CPU: {{ provision_auto_vm_hardware.num_cpus }}

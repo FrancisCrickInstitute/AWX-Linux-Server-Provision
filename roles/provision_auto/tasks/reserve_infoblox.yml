@@ -12,7 +12,7 @@
     comment: >-
       SN: {{ servicenow_ticket }} |
       Desc: {{ vm_description }} |
-      Created: {{ ansible_date_time.date }} |
+      Created: {{ now(utc=true, fmt='%Y-%m-%d') }} |
       By: {{ tower_user_name | default('ansible') }}
     provider:
       host: "{{ provision_auto_infoblox_host }}"
