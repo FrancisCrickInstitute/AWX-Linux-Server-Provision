@@ -1,0 +1,53 @@
+---
+# Created by Adam Spandel, November 2026
+# Purpose: Verifies that the automatically provisioned VMware VM
+# matches the requested hostname, power state, hardware and network.
+
+- name: Gather created VMware VM information
+  community.vmware.vmware_guest_info:
+    hostname: "{{ provision_auto_vcenter_host }}"
+    username: "{{ provision_auto_vcenter_user }}"
+    password: "{{ provision_vcenter_pass }}"
+    validate_certs: "{{ provision_auto_vcenter_validate_certs }}"
+    datacenter: "{{ provision_auto_vcenter_datacenter }}"
+    name: "{{ provision_auto_vm_name }}"
+  register: provision_auto_verify_vm_info
+
+- name: Validate created VMware VM
+  ansible.builtin.assert:
+    that:
+      - provision_auto_verify_vm_info.instance is defined
+      - provision_auto_verify_vm_info.instance.hw_name == provision_auto_vm_name
+      - provision_auto_verify_vm_info.instance.hw_power_status == "poweredOn"
+      - >-
+        provision_auto_verify_vm_info.instance.hw_processor_count | int
+        ==
+        provision_auto_vm_hardware.num_cpus | int
+      - >-
+        provision_auto_verify_vm_info.instance.hw_memtotal_mb | int
+        ==
+        provision_auto_vm_hardware.memory_mb | int
+      - >-
+        provision_auto_verify_vm_info.instance.ipv4
+        == provision_auto_vm_ip
+      - >-
+        provision_auto_verify_vm_info.instance.hw_eth0.summary
+        == provision_auto_vm_vlan
+    fail_msg: >-
+      VMware verification failed for {{ provision_auto_vm_name }}.
+      The created VM does not match one or more requested provisioning values.
+    success_msg: >-
+      VMware verification completed successfully for
+      {{ provision_auto_vm_name }}.
+
+- name: Report created VMware VM verification
+  ansible.builtin.debug:
+    msg:
+      - "VM: {{ provision_auto_verify_vm_info.instance.hw_name }}"
+      - "Power: {{ provision_auto_verify_vm_info.instance.hw_power_status }}"
+      - "IP: {{ provision_auto_verify_vm_info.instance.ipv4 }}"
+      - "vCPU: {{ provision_auto_verify_vm_info.instance.hw_processor_count }}"
+      - >-
+        Memory:
+        {{ provision_auto_verify_vm_info.instance.hw_memtotal_mb }} MB
+      - "Network: {{ provision_auto_verify_vm_info.instance.hw_eth0.summary }}"

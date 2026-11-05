@@ -37,6 +37,11 @@
   when:
     - provision_auto_create_vm | bool
 
+- name: Verify automatic VMware VM
+  ansible.builtin.import_tasks: verify_vmware.yml
+  when:
+    - provision_auto_create_vm | bool
+
 - name: Send automatic provisioning notification
   ansible.builtin.import_tasks: notify.yml
   when:
