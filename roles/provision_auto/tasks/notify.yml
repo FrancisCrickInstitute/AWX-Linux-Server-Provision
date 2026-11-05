@@ -18,10 +18,11 @@
       BSN: {{ bsn }}
       Description: {{ vm_description }}
       Owner: {{ owner }}
+      Created: {{ ansible_date_time.date }}
       Provisioned by: {{ tower_user_name | default('ansible') }}
 
       CPU: {{ provision_auto_vm_hardware.num_cpus }}
-      Memory: {{ provision_auto_vm_hardware.memory_mb }} MB
+      Memory: {{ vm_memory_gb | int }} GB
       OS Disk: {{ provision_auto_vm_disks[0].size_gb }} GB
 
 - name: Send automatic provisioning Slack notification
