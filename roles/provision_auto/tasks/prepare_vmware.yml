@@ -91,7 +91,7 @@
       {{ vm_description }} |
       SN: {{ servicenow_ticket }} |
       BSN: {{ bsn }} |
-      OS: {{ provision_auto_operating_system }} |
       Owner: {{ owner }} |
+      OS: {{ provision_auto_operating_system }} |
       Created: {{ now(utc=true, fmt='%Y-%m-%d') }} |
       Provisioned by: {{ tower_user_name | default('ansible') }}
