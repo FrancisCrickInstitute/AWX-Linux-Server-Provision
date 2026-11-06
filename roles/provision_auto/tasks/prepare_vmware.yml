@@ -87,8 +87,11 @@
 
 - name: Set automatic VM annotation
   ansible.builtin.set_fact:
-    provision_auto_vm_annotation: |-
-      SN: {{ servicenow_ticket }} | OS: {{ provision_auto_operating_system }} | BSN: {{ bsn }}
-      Desc: {{ vm_description }}
-      Owner: {{ owner }}
-      Created: {{ now(utc=true, fmt='%Y-%m-%d') }} | Provisioned by: {{ tower_user_name | default('ansible') }}
+    provision_auto_vm_annotation: >-
+      {{ vm_description }} |
+      SN: {{ servicenow_ticket }} |
+      BSN: {{ bsn }} |
+      OS: {{ provision_auto_operating_system }} |
+      Owner: {{ owner }} |
+      Created: {{ now(utc=true, fmt='%Y-%m-%d') }} |
+      Provisioned by: {{ tower_user_name | default('ansible') }}
