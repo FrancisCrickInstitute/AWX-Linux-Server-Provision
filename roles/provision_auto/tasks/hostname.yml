@@ -60,7 +60,7 @@
     that:
       - >-
         provision_auto_hostname_prefix is
-        match('^clvd[01]-(if|db|dt|ap)-u-(d|t|p)-$')
+        match('^clvd[01]-(if|db|dt|ap|ws)-u-(d|t|p)-$')
     fail_msg: >-
       Generated hostname prefix
       '{{ provision_auto_hostname_prefix }}'

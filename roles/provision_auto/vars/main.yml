@@ -35,6 +35,7 @@ provision_auto_functions:
   Database: db
   Desktop: dt
   Application: ap
+  Webserver: ws
 
 # -----------------------------------------------------------------------------
 # Approved automatic provisioning networks
