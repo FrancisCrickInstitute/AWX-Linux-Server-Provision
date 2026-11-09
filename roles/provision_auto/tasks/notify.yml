@@ -33,11 +33,3 @@
     username: "{{ provision_auto_notification_username }}"
     color: good
     validate_certs: "{{ provision_auto_notification_validate_certs }}"
-
-# - name: Send automatic provisioning Slack notification
-#   community.general.slack:
-#     token: "{{ provision_slack_token }}"
-#     msg: "{{ provision_auto_slack_message }}"
-#     username: "{{ provision_auto_notification_username }}"
-#     color: good
-#     validate_certs: "{{ provision_auto_notification_validate_certs }}"
