@@ -80,3 +80,9 @@ provision_auto_resume_hostname: ""
 provision_auto_notification_enabled: true
 provision_auto_notification_username: "Ansible AWX"
 provision_auto_notification_validate_certs: false
+
+# -----------------------------------------------------------------------------
+# Slack notification
+# -----------------------------------------------------------------------------
+
+provision_auto_notification_channel: "C0BHW37EAMA"
